@@ -1,0 +1,1868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LaunchX CRM</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --blue: #5B72E8;
+    --dark-blue: #1E3A8A;
+    --dark: #1A1A2E;
+    --light-bg: #EEF2FF;
+    --green: #16A34A;
+    --green-bg: #F0FDF4;
+    --gray: #6B7280;
+    --light-gray: #F3F4F6;
+    --border: #E5E7EB;
+    --white: #ffffff;
+    --amber: #F59E0B;
+    --red: #EF4444;
+    --red-bg: #FEF2F2;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #F8F9FF;
+    color: var(--dark);
+    min-height: 100vh;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0;
+    width: 220px; background: var(--dark);
+    display: flex; flex-direction: column;
+    padding: 20px 0; z-index: 100;
+  }
+
+  .logo {
+    padding: 0 20px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 16px;
+  }
+
+  .logo-name {
+    font-size: 20px; font-weight: 700; color: white;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .logo-name span { color: var(--blue); }
+
+  .logo-sub {
+    font-size: 9px; font-weight: 500; color: rgba(255,255,255,0.4);
+    letter-spacing: 0.12em; text-transform: uppercase; margin-top: 2px;
+  }
+
+  .logo-icon {
+    width: 32px; height: 32px; background: var(--blue);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+
+  .nav-section { padding: 0 12px; margin-bottom: 8px; }
+  .nav-label {
+    font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.3);
+    letter-spacing: 0.1em; text-transform: uppercase; padding: 0 8px; margin-bottom: 4px;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 8px; cursor: pointer;
+    color: rgba(255,255,255,0.6); font-size: 13px; font-weight: 500;
+    transition: all 0.15s;
+  }
+
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+  .nav-item.active { background: var(--blue); color: white; }
+  .nav-item .icon { font-size: 15px; width: 18px; text-align: center; }
+  .nav-badge { background: var(--red); color: white; font-size: 10px; font-weight: 700; border-radius: 20px; padding: 1px 6px; margin-left: auto; }
+
+  /* CONVERSATION VIEWER */
+  .convo-wrap { background: white; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 14px; }
+  .convo-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: var(--light-gray); border-bottom: 1px solid var(--border); cursor: pointer; }
+  .convo-customer { font-size: 13px; font-weight: 600; color: var(--dark); }
+  .convo-meta { font-size: 11px; color: var(--gray); margin-top: 2px; }
+  .convo-body { padding: 14px 18px; display: flex; flex-direction: column; gap: 8px; }
+  .msg-bubble { max-width: 75%; padding: 9px 13px; border-radius: 12px; font-size: 12px; line-height: 1.5; }
+  .msg-inbound { background: var(--light-gray); color: var(--dark); border-bottom-left-radius: 3px; align-self: flex-start; }
+  .msg-outbound { background: var(--blue); color: white; border-bottom-right-radius: 3px; align-self: flex-end; }
+  .msg-urgent { background: var(--red-bg); color: var(--red); border: 1px solid #FECACA; }
+  .msg-time { font-size: 10px; color: var(--gray); margin-top: 2px; }
+  .msg-time-right { text-align: right; }
+
+  /* HEALTH SCORE */
+  .health-good { color: var(--green); font-weight: 600; }
+  .health-warn { color: var(--amber); font-weight: 600; }
+  .health-bad { color: var(--red); font-weight: 600; }
+
+  .sidebar-footer {
+    margin-top: auto; padding: 16px 20px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .sidebar-footer-text { font-size: 10px; color: rgba(255,255,255,0.3); }
+
+  /* MAIN */
+  .main { margin-left: 220px; padding: 28px; min-height: 100vh; }
+
+  /* HEADER */
+  .page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .page-title { font-size: 22px; font-weight: 700; color: var(--dark); }
+  .page-subtitle { font-size: 13px; color: var(--gray); margin-top: 2px; }
+
+  .btn {
+    padding: 9px 18px; border-radius: 8px; border: none;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 6px;
+  }
+
+  .btn-primary { background: var(--blue); color: white; }
+  .btn-primary:hover { background: var(--dark-blue); }
+  .btn-secondary { background: var(--white); color: var(--dark); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--light-gray); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-danger { background: var(--red-bg); color: var(--red); border: 1px solid #FECACA; }
+
+  /* STATS */
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: white; border-radius: 12px; padding: 18px 20px;
+    border: 1px solid var(--border);
+  }
+
+  .stat-label { font-size: 11px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .stat-value { font-size: 28px; font-weight: 700; color: var(--dark); }
+  .stat-sub { font-size: 11px; color: var(--gray); margin-top: 4px; }
+  .stat-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+
+  /* FILTERS */
+  .filters {
+    display: flex; gap: 10px; margin-bottom: 20px; align-items: center;
+  }
+
+  .search-box {
+    flex: 1; display: flex; align-items: center; gap: 8px;
+    background: white; border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 14px;
+  }
+
+  .search-box input {
+    border: none; outline: none; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; width: 100%; color: var(--dark);
+    background: transparent;
+  }
+
+  .filter-btn {
+    padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border);
+    background: white; font-family: 'DM Sans', sans-serif; font-size: 12px;
+    font-weight: 500; cursor: pointer; color: var(--gray); transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .filter-btn:hover, .filter-btn.active { background: var(--light-bg); color: var(--blue); border-color: var(--blue); }
+
+  /* TABLE */
+  .table-card {
+    background: white; border-radius: 12px; border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .table-header {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1.2fr 1.2fr 1fr 1fr 1.2fr;
+    padding: 12px 20px; background: var(--light-gray);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px; font-weight: 600; color: var(--gray);
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+
+  .table-row {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1.2fr 1.2fr 1fr 1fr 1.2fr;
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    align-items: center; transition: background 0.1s; cursor: pointer;
+  }
+
+  .table-row:last-child { border-bottom: none; }
+  .table-row:hover { background: #FAFBFF; }
+
+  .lead-name { font-weight: 600; font-size: 13px; color: var(--dark); }
+  .lead-biz { font-size: 11px; color: var(--gray); margin-top: 1px; }
+  .lead-contact { font-size: 12px; color: var(--dark); }
+  .lead-contact-sub { font-size: 11px; color: var(--gray); }
+
+  .badge {
+    display: inline-flex; align-items: center; padding: 3px 9px;
+    border-radius: 20px; font-size: 11px; font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .badge-cold { background: #F3F4F6; color: #6B7280; }
+  .badge-contacted { background: #EFF6FF; color: #3B82F6; }
+  .badge-interested { background: #FFF7ED; color: #EA580C; }
+  .badge-closed { background: #F0FDF4; color: #16A34A; }
+  .badge-standard { background: var(--light-bg); color: var(--blue); }
+  .badge-premium { background: #EDE9FE; color: #7C3AED; }
+  .badge-none { background: var(--light-gray); color: var(--gray); }
+  .badge-paid { background: var(--green-bg); color: var(--green); }
+  .badge-deposit { background: #FFF7ED; color: #EA580C; }
+  .badge-unpaid { background: var(--red-bg); color: var(--red); }
+
+  .actions { display: flex; gap: 6px; }
+
+  .icon-btn {
+    width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border);
+    background: white; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; font-size: 13px; transition: all 0.15s;
+  }
+
+  .icon-btn:hover { background: var(--light-bg); border-color: var(--blue); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; padding: 20px;
+  }
+
+  .modal {
+    background: white; border-radius: 16px; width: 100%; max-width: 560px;
+    max-height: 90vh; overflow-y: auto;
+  }
+
+  .modal-header {
+    padding: 20px 24px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .modal-title { font-size: 16px; font-weight: 700; }
+  .modal-close {
+    width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border);
+    background: white; cursor: pointer; font-size: 16px; display: flex;
+    align-items: center; justify-content: center;
+  }
+
+  .modal-body { padding: 24px; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-grid.full { grid-template-columns: 1fr; }
+
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.span2 { grid-column: span 2; }
+
+  .form-label { font-size: 11px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .form-input, .form-select, .form-textarea {
+    padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--dark);
+    outline: none; transition: border 0.15s;
+  }
+
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--blue); }
+  .form-textarea { resize: vertical; min-height: 80px; }
+
+  /* DETAIL PANEL */
+  .detail-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+    z-index: 900;
+  }
+
+  .detail-panel {
+    position: fixed; right: 0; top: 0; bottom: 0;
+    width: 420px; background: white; z-index: 950;
+    display: flex; flex-direction: column;
+    box-shadow: -4px 0 24px rgba(0,0,0,0.1);
+    overflow-y: auto;
+  }
+
+  .detail-header {
+    padding: 20px 24px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; justify-content: space-between;
+  }
+
+  .detail-name { font-size: 18px; font-weight: 700; }
+  .detail-biz { font-size: 13px; color: var(--gray); margin-top: 2px; }
+
+  .detail-body { padding: 20px 24px; flex: 1; }
+  .detail-section { margin-bottom: 20px; }
+  .detail-section-title {
+    font-size: 11px; font-weight: 600; color: var(--gray);
+    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px;
+  }
+
+  .detail-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #F9FAFB; font-size: 13px; }
+  .detail-key { color: var(--gray); }
+  .detail-val { font-weight: 500; color: var(--dark); text-align: right; max-width: 200px; word-break: break-word; }
+
+  .note-box {
+    background: var(--light-gray); border-radius: 8px; padding: 12px;
+    font-size: 12px; color: var(--dark); line-height: 1.5;
+    margin-bottom: 8px;
+  }
+
+  .note-date { font-size: 10px; color: var(--gray); margin-top: 4px; }
+
+  .note-input-row { display: flex; gap: 8px; margin-top: 10px; }
+  .note-input {
+    flex: 1; padding: 8px 12px; border: 1px solid var(--border);
+    border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 12px;
+    outline: none;
+  }
+
+  .note-input:focus { border-color: var(--blue); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    padding: 60px 20px; text-align: center; color: var(--gray);
+  }
+
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-title { font-size: 15px; font-weight: 600; color: var(--dark); margin-bottom: 6px; }
+  .empty-sub { font-size: 13px; }
+
+  /* REVENUE SECTION */
+  .revenue-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .rev-card { background: white; border-radius: 12px; padding: 20px; border: 1px solid var(--border); }
+  .rev-title { font-size: 11px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+
+  .pipeline-bar { display: flex; gap: 2px; height: 8px; border-radius: 10px; overflow: hidden; margin: 8px 0; }
+  .pipeline-seg { height: 100%; border-radius: 2px; }
+
+  .pipeline-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--gray); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  .followup-list { display: flex; flex-direction: column; gap: 8px; }
+  .followup-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    background: var(--light-gray); border-radius: 8px; font-size: 12px;
+  }
+
+  .followup-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .followup-name { font-weight: 600; color: var(--dark); }
+  .followup-info { color: var(--gray); }
+  .followup-date { margin-left: auto; font-size: 11px; color: var(--gray); white-space: nowrap; }
+
+  /* REPORTS */
+  .report-wrap { background: white; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
+  .report-top { background: var(--dark); padding: 20px 24px; color: white; display: flex; align-items: flex-start; justify-content: space-between; }
+  .report-biz { font-size: 18px; font-weight: 700; }
+  .report-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 3px; }
+  .report-body { padding: 20px 24px; }
+  .report-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+  .report-stat { background: var(--light-gray); border-radius: 10px; padding: 14px; }
+  .report-stat-val { font-size: 24px; font-weight: 700; color: var(--dark); }
+  .report-stat-label { font-size: 10px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 3px; }
+  .report-section { margin-bottom: 18px; }
+  .report-section-title { font-size: 11px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .report-row { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #F9FAFB; }
+  .report-row:last-child { border-bottom: none; }
+  .report-row span:last-child { font-weight: 600; }
+  .report-insight { background: var(--light-bg); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #3730A3; line-height: 1.5; margin-bottom: 6px; }
+  .report-sms-preview { background: var(--light-gray); border-radius: 8px; padding: 12px 14px; font-size: 12px; color: var(--dark); line-height: 1.6; font-style: italic; }
+  .bar-chart { display: flex; gap: 4px; align-items: flex-end; height: 52px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .bar-fill { width: 100%; background: var(--blue); border-radius: 3px 3px 0 0; }
+  .bar-label { font-size: 10px; color: var(--gray); }
+  @media print {
+    .sidebar, .page-header button, .report-top button { display: none !important; }
+    .main { margin-left: 0; }
+    .report-wrap { break-inside: avoid; border: 1px solid #ddd; }
+  }
+  .tw-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px 24px; margin-bottom: 16px; }
+  .tw-card-title { font-size: 11px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; }
+  .tw-status { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; margin-bottom: 14px; }
+  .tw-status.connected { background: var(--green-bg); color: var(--green); }
+  .tw-status.disconnected { background: var(--red-bg); color: var(--red); }
+  .tw-status.pending { background: #FFF7ED; color: #EA580C; }
+  .tw-step { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .tw-step:last-child { border-bottom: none; padding-bottom: 0; }
+  .tw-step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--blue); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+  .tw-step h4 { font-size: 13px; font-weight: 600; margin-bottom: 4px; color: var(--dark); }
+  .tw-step p { font-size: 12px; color: var(--gray); line-height: 1.6; }
+  .tw-step a { color: var(--blue); text-decoration: none; }
+  .tw-webhook-row { display: flex; align-items: center; gap: 10px; background: var(--light-gray); border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; }
+  .tw-webhook-label { font-size: 11px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 0.05em; width: 100px; flex-shrink: 0; }
+  .tw-webhook-url { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--blue); flex: 1; }
+  .test-result { padding: 10px 14px; border-radius: 8px; font-size: 12px; margin-top: 10px; }
+  .test-ok { background: var(--green-bg); color: var(--green); }
+  .test-fail { background: var(--red-bg); color: var(--red); }
+
+  .hidden { display: none !important; }
+
+  .tab-bar { display: flex; gap: 4px; background: var(--light-gray); padding: 4px; border-radius: 10px; margin-bottom: 20px; }
+  .tab {
+    flex: 1; padding: 8px; border-radius: 7px; border: none;
+    background: transparent; font-family: 'DM Sans', sans-serif;
+    font-size: 12px; font-weight: 600; cursor: pointer; color: var(--gray);
+    transition: all 0.15s;
+  }
+  .tab.active { background: white; color: var(--dark); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+  .section { display: none; }
+  .section.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-name">
+      <div class="logo-icon">🚀</div>
+      <div>
+        <div>Launch<span>X</span></div>
+        <div class="logo-sub">Web Studio CRM</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Menu</div>
+    <div class="nav-item active" onclick="showSection('dashboard')">
+      <span class="icon">📊</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="showSection('leads')">
+      <span class="icon">👥</span> All Leads
+    </div>
+    <div class="nav-item" onclick="showSection('followups')">
+      <span class="icon">📅</span> Follow Ups
+    </div>
+    <div class="nav-item" onclick="showSection('clients')">
+      <span class="icon">✅</span> Active Clients
+    </div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">System</div>
+    <div class="nav-item" onclick="showSection('twilio')">
+      <span class="icon">📱</span> Twilio Setup
+    </div>
+    <div class="nav-item" onclick="showSection('conversations')">
+      <span class="icon">💬</span> Conversations
+      <span class="nav-badge hidden" id="urgent-badge">0</span>
+    </div>
+    <div class="nav-item" onclick="showSection('reports')">
+      <span class="icon">📈</span> Monthly Reports
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-footer-text">LaunchX Web Studio</div>
+    <div class="sidebar-footer-text">Landon Harris</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- DASHBOARD -->
+  <div id="section-dashboard" class="section active">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Dashboard</div>
+        <div class="page-subtitle">Welcome back, Landon 👋</div>
+      </div>
+      <button class="btn btn-primary" onclick="openAddModal()">+ Add Lead</button>
+    </div>
+
+    <div class="stats-grid" id="stats-grid"></div>
+
+    <div class="revenue-grid">
+      <div class="rev-card">
+        <div class="rev-title">Pipeline Breakdown</div>
+        <div class="pipeline-bar" id="pipeline-bar"></div>
+        <div class="pipeline-legend" id="pipeline-legend"></div>
+      </div>
+      <div class="rev-card">
+        <div class="rev-title">Monthly Recurring Revenue</div>
+        <div id="mrr-display" style="font-size:32px;font-weight:700;color:var(--blue);margin:8px 0;"></div>
+        <div id="mrr-sub" style="font-size:12px;color:var(--gray);"></div>
+      </div>
+    </div>
+
+    <div class="rev-card" style="margin-bottom:0">
+      <div class="rev-title" style="margin-bottom:12px">Upcoming Follow Ups</div>
+      <div class="followup-list" id="followup-list-dash"></div>
+    </div>
+  </div>
+
+  <!-- ALL LEADS -->
+  <div id="section-leads" class="section">
+    <div class="page-header">
+      <div>
+        <div class="page-title">All Leads</div>
+        <div class="page-subtitle" id="leads-count-label">Loading...</div>
+      </div>
+      <button class="btn btn-primary" onclick="openAddModal()">+ Add Lead</button>
+    </div>
+
+    <div class="filters">
+      <div class="search-box">
+        <span>🔍</span>
+        <input type="text" placeholder="Search by name, business, phone..." id="search-input" oninput="renderTable()">
+      </div>
+      <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+      <button class="filter-btn" onclick="setFilter('cold', this)">Cold</button>
+      <button class="filter-btn" onclick="setFilter('contacted', this)">Contacted</button>
+      <button class="filter-btn" onclick="setFilter('interested', this)">Interested</button>
+      <button class="filter-btn" onclick="setFilter('closed', this)">Closed</button>
+    </div>
+
+    <div class="table-card">
+      <div class="table-header">
+        <div>Lead</div>
+        <div>Contact</div>
+        <div>Stage</div>
+        <div>Service</div>
+        <div>Payment</div>
+        <div>Follow Up</div>
+        <div>Actions</div>
+      </div>
+      <div id="leads-table-body"></div>
+    </div>
+  </div>
+
+  <!-- FOLLOW UPS -->
+  <div id="section-followups" class="section">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Follow Ups</div>
+        <div class="page-subtitle">Leads needing attention</div>
+      </div>
+      <button class="btn btn-primary" onclick="openAddModal()">+ Add Lead</button>
+    </div>
+    <div class="table-card" style="padding:20px">
+      <div class="followup-list" id="followup-list-full"></div>
+    </div>
+  </div>
+
+  <!-- ACTIVE CLIENTS -->
+  <div id="section-clients" class="section">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Active Clients</div>
+        <div class="page-subtitle">Manage client auto-text configuration</div>
+      </div>
+      <button class="btn btn-primary" onclick="openClientModal()">+ Add Client</button>
+    </div>
+    <div id="clients-list"></div>
+  </div>
+
+  <!-- CLIENT MODAL -->
+  <div id="client-modal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center">
+    <div style="background:white;border-radius:16px;width:580px;max-width:95vw;max-height:90vh;overflow-y:auto;padding:28px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div style="font-size:16px;font-weight:700" id="client-modal-title">Add Client</div>
+        <button onclick="closeClientModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray)">×</button>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Business Name *</label>
+          <input class="form-input" id="c-biz" placeholder="Johnson HVAC">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Twilio Number (E.164 format) *</label>
+          <input class="form-input" id="c-number" placeholder="+14695551234">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Booking Link *</label>
+          <input class="form-input" id="c-booking" placeholder="https://calendly.com/johnsonhvac">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Timezone</label>
+          <select class="form-select" id="c-tz">
+            <option value="America/Chicago">Central (CST/CDT)</option>
+            <option value="America/New_York">Eastern (EST/EDT)</option>
+            <option value="America/Denver">Mountain (MST/MDT)</option>
+            <option value="America/Los_Angeles">Pacific (PST/PDT)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Plan</label>
+          <select class="form-select" id="c-plan">
+            <option value="standard">Standard — $147/month</option>
+            <option value="premium">Premium — $197/month</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Active</label>
+          <select class="form-select" id="c-active">
+            <option value="true">Active</option>
+            <option value="false">Paused</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Client's Real Cell Number (E.164)</label>
+          <input class="form-input" id="c-owner-phone" placeholder="+19725551234">
+          <div style="font-size:11px;color:var(--gray);margin-top:4px">Customer replies get forwarded here. Client replies from this number go back to the customer.</div>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label class="form-label">Business Hours Message (8am–6pm Mon–Sat)</label>
+        <textarea class="form-textarea" id="c-biz-msg" style="min-height:80px" placeholder="Hi! Thanks for calling [BUSINESS NAME]. We're on a job but here for you. Text URGENT for emergencies or book here: [BOOKING LINK]"></textarea>
+        <div style="font-size:11px;color:var(--gray);margin-top:4px">Use [BUSINESS NAME] and [BOOKING LINK] as placeholders — they get replaced automatically</div>
+      </div>
+      <div class="form-group" style="margin-bottom:20px">
+        <label class="form-label">After Hours Message (6pm–8am & Sunday)</label>
+        <textarea class="form-textarea" id="c-after-msg" style="min-height:80px" placeholder="Hi! Thanks for calling [BUSINESS NAME]. We're closed but available for emergencies. Text EMERGENCY for urgent issues or book here: [BOOKING LINK]"></textarea>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-secondary" onclick="closeClientModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveClient()">💾 Save Client</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MONTHLY REPORTS -->
+  <div id="section-reports" class="section">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Monthly Reports</div>
+        <div class="page-subtitle" id="reports-month"></div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <select class="form-select" id="report-month-select" style="font-size:12px;padding:7px 12px" onchange="renderReports()"></select>
+        <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ Print All</button>
+      </div>
+    </div>
+    <div id="reports-body"></div>
+  </div>
+
+  <!-- CONVERSATIONS -->
+  <div id="section-conversations" class="section">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Conversations</div>
+        <div class="page-subtitle">Text history per client</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <select class="form-select" id="convo-client-filter" style="font-size:12px;padding:7px 12px" onchange="renderConversations()">
+          <option value="">All Clients</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="renderConversations()">🔄 Refresh</button>
+      </div>
+    </div>
+    <div id="urgent-alert" class="hidden" style="background:var(--red-bg);border:1px solid #FECACA;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:18px">🚨</span>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--red)" id="urgent-alert-text">Urgent message received</div>
+        <div style="font-size:11px;color:var(--red);margin-top:2px">A customer texted URGENT or EMERGENCY — make sure your client calls them back immediately</div>
+      </div>
+    </div>
+    <div id="conversations-body"></div>
+  </div>
+
+  <!-- TWILIO SETUP -->
+  <div id="section-twilio" class="section">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Twilio Setup</div>
+        <div class="page-subtitle">Missed call auto-text configuration</div>
+      </div>
+    </div>
+
+    <!-- CREDENTIALS -->
+    <div class="tw-card">
+      <div class="tw-card-title">Twilio Credentials</div>
+      <div class="tw-status disconnected" id="twilio-status">⚠️ Not connected — enter credentials below</div>
+      <div class="form-grid" style="margin-bottom:14px">
+        <div class="form-group">
+          <label class="form-label">Account SID</label>
+          <input class="form-input" id="tw-sid" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Auth Token</label>
+          <input class="form-input" id="tw-token" type="password" placeholder="••••••••••••••••••••••••••••••••">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Your LaunchX Twilio Number</label>
+          <input class="form-input" id="tw-from" placeholder="+14694527134">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Default Booking Link</label>
+          <input class="form-input" id="tw-booking" placeholder="https://launchxwebstudio.netlify.app">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary btn-sm" onclick="saveTwilio()">💾 Save Credentials</button>
+        <button class="btn btn-secondary btn-sm" onclick="testTwilio()">📤 Send Test SMS</button>
+      </div>
+      <div id="test-result" class="hidden"></div>
+    </div>
+
+    <!-- WEBHOOK SERVER -->
+    <div class="tw-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="tw-card-title" style="margin-bottom:0">Webhook Server</div>
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;background:var(--green-bg);color:var(--green);padding:4px 12px;border-radius:20px">
+          <span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span> Live on Render
+        </span>
+      </div>
+      <div style="font-size:12px;color:var(--gray);margin-bottom:14px">
+        <a href="https://launchx-webhook.onrender.com" target="_blank" style="color:var(--blue);font-family:'DM Mono',monospace">launchx-webhook.onrender.com</a> — handles all missed call detection and auto-texts 24/7
+      </div>
+      <div class="tw-card-title">Webhook URLs — paste these in Twilio Console → your number</div>
+      <div class="tw-webhook-row">
+        <span class="tw-webhook-label">Voice</span>
+        <span class="tw-webhook-url">https://launchx-webhook.onrender.com/missed-call</span>
+        <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText('https://launchx-webhook.onrender.com/missed-call')">Copy</button>
+      </div>
+      <div class="tw-webhook-row">
+        <span class="tw-webhook-label">Messaging</span>
+        <span class="tw-webhook-url">https://launchx-webhook.onrender.com/inbound-sms</span>
+        <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText('https://launchx-webhook.onrender.com/inbound-sms')">Copy</button>
+      </div>
+    </div>
+
+    <!-- A2P STATUS -->
+    <div class="tw-card" style="border-color:#FCD34D">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:15px">⏳</span>
+        <div style="font-size:14px;font-weight:700;color:var(--dark)">A2P 10DLC Registration — Pending</div>
+      </div>
+      <div style="font-size:13px;color:var(--gray);line-height:1.6;margin-bottom:10px">
+        Brand submitted. EIN is brand new — IRS propagation takes 24–48 hrs. Try resubmitting tomorrow. Campaign registration required ($15 one-time + ~$10/mo) before texting client customers.
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div style="font-size:11px;color:var(--gray);font-family:'DM Mono',monospace">EIN: 42-2683181 · LANDON C HARRIS · Low-Volume Standard</div>
+        <a href="https://console.twilio.com/us1/develop/sms/regulatory-compliance/a2p-onboarding" target="_blank" class="btn btn-secondary btn-sm">Continue in Twilio ↗</a>
+      </div>
+    </div>
+
+    <!-- HOW TO ADD A CLIENT -->
+    <div class="tw-card">
+      <div class="tw-card-title">How to Onboard a New Client</div>
+      <div class="tw-step">
+        <div class="tw-step-num">1</div>
+        <div>
+          <h4>Client signs contract + pays $75 deposit</h4>
+          <p>Send the contract PDF via email. Once deposit is received via Stripe, proceed immediately to step 2.</p>
+        </div>
+      </div>
+      <div class="tw-step">
+        <div class="tw-step-num">2</div>
+        <div>
+          <h4>Buy a Twilio number for the client</h4>
+          <p>Go to <a href="https://console.twilio.com/us1/develop/phone-numbers/manage/search" target="_blank">Twilio Console → Buy a Number</a>. Search their local area code. Cost: $1.15/month. Set both webhook URLs above on the new number.</p>
+        </div>
+      </div>
+      <div class="tw-step">
+        <div class="tw-step-num">3</div>
+        <div>
+          <h4>Add client in the Active Clients tab</h4>
+          <p>Go to <strong>Active Clients</strong> and click <strong>Add Client</strong>. Enter their Twilio number, business name, booking link, and custom messages. Saves directly to Supabase — webhook picks it up instantly, no code needed.</p>
+        </div>
+      </div>
+      <div class="tw-step">
+        <div class="tw-step-num">4</div>
+        <div>
+          <h4>Set up call forwarding</h4>
+          <p>Client calls their carrier to forward unanswered calls to their new Twilio number. AT&T: dial <strong>*92 + number</strong> · Verizon: <strong>*71 + number</strong>. Their public number stays the same.</p>
+        </div>
+      </div>
+      <div class="tw-step">
+        <div class="tw-step-num">5</div>
+        <div>
+          <h4>Test → go live → send Stripe recurring link</h4>
+          <p>Call the forwarded number, don't answer, confirm the auto-text fires. Once live, send the Stripe recurring payment link. Free trial starts from this moment.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SMS TEMPLATES -->
+    <div class="tw-card">
+      <div class="tw-card-title">SMS Message Templates</div>
+      <div style="font-size:12px;color:var(--gray);margin-bottom:14px">Reference templates used in monthly reports. Live messages are in <a href="https://github.com/launchxwebstudio/launchx-webhook/blob/main/index.js" target="_blank" style="color:var(--blue);font-family:'DM Mono',monospace;font-size:11px">index.js</a> on GitHub.</div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label class="form-label">Business Hours (8am–6pm Mon–Sat)</label>
+        <textarea class="form-textarea" id="sms-biz">Hi! Thanks for calling [BUSINESS NAME]. We're currently on a job but we're here for you. For urgent requests text URGENT and we'll call you back as soon as possible. To book: [BOOKING LINK]</textarea>
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label class="form-label">After Hours (6pm–8am &amp; Sunday)</label>
+        <textarea class="form-textarea" id="sms-after">Hi! Thanks for calling [BUSINESS NAME]. We're closed right now but available for emergencies. Text EMERGENCY for urgent issues and we'll call you back as soon as possible. To book: [BOOKING LINK]</textarea>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="saveTemplates()">💾 Save Templates</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay hidden" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Add New Lead</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">First Name *</label>
+          <input class="form-input" id="f-fname" placeholder="Mike">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Name</label>
+          <input class="form-input" id="f-lname" placeholder="Johnson">
+        </div>
+        <div class="form-group span2">
+          <label class="form-label">Business Name *</label>
+          <input class="form-input" id="f-biz" placeholder="Johnson HVAC">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input class="form-input" id="f-phone" placeholder="(469) 555-1234">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="f-email" placeholder="mike@johnsonhvac.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pipeline Stage</label>
+          <select class="form-select" id="f-stage">
+            <option value="cold">Cold</option>
+            <option value="contacted">Contacted</option>
+            <option value="interested">Interested</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Service Interest</label>
+          <select class="form-select" id="f-service">
+            <option value="none">Not decided</option>
+            <option value="standard">Standard — $147/mo</option>
+            <option value="premium">Premium — $197/mo</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Payment Status</label>
+          <select class="form-select" id="f-payment">
+            <option value="unpaid">Unpaid</option>
+            <option value="deposit">Deposit Paid ($75)</option>
+            <option value="paid">Fully Paid</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Follow Up Date</label>
+          <input class="form-input" id="f-followup" type="date">
+        </div>
+        <div class="form-group span2">
+          <label class="form-label">Notes</label>
+          <textarea class="form-textarea" id="f-notes" placeholder="Add notes about this lead..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveLead()">Save Lead</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL PANEL -->
+<div class="detail-overlay hidden" id="detail-overlay" onclick="closeDetail()"></div>
+<div class="detail-panel hidden" id="detail-panel">
+  <div class="detail-header">
+    <div>
+      <div class="detail-name" id="dp-name"></div>
+      <div class="detail-biz" id="dp-biz"></div>
+    </div>
+    <button class="modal-close" onclick="closeDetail()">✕</button>
+  </div>
+  <div class="detail-body">
+    <div class="detail-section">
+      <div class="detail-section-title">Contact Info</div>
+      <div class="detail-row"><span class="detail-key">Phone</span><span class="detail-val" id="dp-phone"></span></div>
+      <div class="detail-row"><span class="detail-key">Email</span><span class="detail-val" id="dp-email"></span></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">Deal Info</div>
+      <div class="detail-row"><span class="detail-key">Stage</span><span class="detail-val" id="dp-stage"></span></div>
+      <div class="detail-row"><span class="detail-key">Service</span><span class="detail-val" id="dp-service"></span></div>
+      <div class="detail-row"><span class="detail-key">Payment</span><span class="detail-val" id="dp-payment"></span></div>
+      <div class="detail-row"><span class="detail-key">Follow Up</span><span class="detail-val" id="dp-followup"></span></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">Notes</div>
+      <div id="dp-notes-list"></div>
+      <div class="note-input-row">
+        <input class="note-input" id="new-note-input" placeholder="Add a note..." onkeydown="if(event.key==='Enter')addNote()">
+        <button class="btn btn-primary btn-sm" onclick="addNote()">Add</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-secondary btn-sm" onclick="editCurrentLead()" style="flex:1">✏️ Edit</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteCurrentLead()" style="flex:1">🗑️ Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+const SUPA_URL = 'https://bzcfadaushfliakabrdh.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6Y2ZhZGF1c2hmbGlha2FicmRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMjEyNDQsImV4cCI6MjA5NDg5NzI0NH0.RIFitNW5Q-zpEjWDCKhf60x6FkbpuqbtjJWMuDUciEQ';
+let leads = JSON.parse(localStorage.getItem('lx_leads') || '[]');
+let currentFilter = 'all';
+let currentLeadId = null;
+let editingId = null;
+
+function save() {
+  localStorage.setItem('lx_leads', JSON.stringify(leads));
+}
+
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+// ── NAVIGATION ──
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (name === 'leads') renderTable();
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'followups') renderFollowups();
+  if (name === 'reports') renderReports();
+  if (name === 'conversations') renderConversations();
+  if (name === 'clients') renderClients();
+}
+
+// ── URGENT BADGE POLLING ──
+async function checkUrgentBadge() {
+  try {
+    const month = new Date().toISOString().slice(0,7);
+    const res = await fetch(`${SUPA_URL}/rest/v1/call_logs?urgent=eq.true&month=eq.${month}&select=id,business_name,caller_number,created_at`, {
+      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+    });
+    const data = await res.json();
+    const badge = document.getElementById('urgent-badge');
+    if(data && data.length > 0) {
+      badge.textContent = data.length;
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
+  } catch(e) {}
+}
+
+// Poll every 60 seconds
+checkUrgentBadge();
+setInterval(checkUrgentBadge, 60000);
+
+// ── CLIENT HEALTH SCORE ──
+async function checkClientHealth(c) {
+  const el = document.getElementById(`health-${c.id}`);
+  if(!el) return;
+  try {
+    // Check if any call logged in last 7 days
+    const since = new Date(Date.now() - 7*24*60*60*1000).toISOString();
+    const res = await fetch(
+      `${SUPA_URL}/rest/v1/call_logs?client_number=eq.${encodeURIComponent(c.twilio_number)}&created_at=gte.${since}&select=id&limit=1`,
+      { headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` } }
+    );
+    const data = await res.json();
+    if(data && data.length > 0) {
+      el.style.background = 'var(--green-bg)';
+      el.style.color = 'var(--green)';
+      el.textContent = '✓ System Active';
+    } else {
+      // No calls in 7 days — check if any calls ever
+      const res2 = await fetch(
+        `${SUPA_URL}/rest/v1/call_logs?client_number=eq.${encodeURIComponent(c.twilio_number)}&select=id&limit=1`,
+        { headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` } }
+      );
+      const data2 = await res2.json();
+      if(data2 && data2.length > 0) {
+        el.style.background = '#FFF7ED';
+        el.style.color = '#EA580C';
+        el.textContent = '⚠️ No calls 7d';
+      } else {
+        el.style.background = 'var(--light-gray)';
+        el.style.color = 'var(--gray)';
+        el.textContent = '○ No calls yet';
+      }
+    }
+  } catch(e) {
+    el.textContent = '? Unknown';
+  }
+}
+
+// ── CONVERSATIONS ──
+async function renderConversations() {
+  const body = document.getElementById('conversations-body');
+  if(!body) return;
+  body.innerHTML = `<div style="text-align:center;padding:40px;color:var(--gray);font-size:13px">Loading conversations...</div>`;
+
+  // Populate client filter
+  try {
+    const cRes = await fetch(`${SUPA_URL}/rest/v1/clients?select=business_name,twilio_number&order=business_name`, {
+      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+    });
+    const cData = await cRes.json();
+    const sel = document.getElementById('convo-client-filter');
+    const current = sel.value;
+    sel.innerHTML = '<option value="">All Clients</option>' +
+      (cData||[]).map(c => `<option value="${c.twilio_number}"${current===c.twilio_number?' selected':''}>${c.business_name}</option>`).join('');
+  } catch(e) {}
+
+  // Fetch messages
+  try {
+    const filter = document.getElementById('convo-client-filter').value;
+    let url = `${SUPA_URL}/rest/v1/messages?select=*&order=created_at.desc&limit=200`;
+    if(filter) url += `&twilio_number=eq.${encodeURIComponent(filter)}`;
+
+    const res = await fetch(url, { headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` } });
+    const messages = await res.json();
+
+    if(!messages || messages.length === 0) {
+      body.innerHTML = `<div class="empty-state"><div class="empty-icon">💬</div><div class="empty-title">No messages yet</div><div class="empty-sub">Messages will appear here once your system is live and calls start coming in</div></div>`;
+      return;
+    }
+
+    // Group by twilio_number + customer_number
+    const threads = {};
+    messages.forEach(m => {
+      const key = m.twilio_number + '|' + m.customer_number;
+      if(!threads[key]) threads[key] = { twilio_number: m.twilio_number, customer_number: m.customer_number, business_name: m.business_name, messages: [], hasUrgent: false };
+      threads[key].messages.push(m);
+      if(m.urgent) threads[key].hasUrgent = true;
+    });
+
+    // Show urgent alert if any urgent
+    const urgentThreads = Object.values(threads).filter(t => t.hasUrgent);
+    const alertEl = document.getElementById('urgent-alert');
+    if(urgentThreads.length > 0) {
+      alertEl.classList.remove('hidden');
+      alertEl.style.display = 'flex';
+      document.getElementById('urgent-alert-text').textContent =
+        `🚨 ${urgentThreads.length} urgent message${urgentThreads.length>1?'s':''} — ${urgentThreads.map(t=>t.business_name).join(', ')}`;
+    } else {
+      alertEl.classList.add('hidden');
+    }
+
+    // Sort threads: urgent first then most recent
+    const sorted = Object.values(threads).sort((a,b) => {
+      if(a.hasUrgent && !b.hasUrgent) return -1;
+      if(!a.hasUrgent && b.hasUrgent) return 1;
+      return new Date(b.messages[0].created_at) - new Date(a.messages[0].created_at);
+    });
+
+    body.innerHTML = sorted.map(thread => {
+      const msgs = [...thread.messages].reverse(); // oldest first
+      const lastMsg = thread.messages[0];
+      const lastTime = new Date(lastMsg.created_at).toLocaleString('en-US', {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+
+      return `
+      <div class="convo-wrap">
+        <div class="convo-header" onclick="this.nextElementSibling.classList.toggle('hidden')">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="convo-customer">${thread.customer_number}</div>
+              ${thread.hasUrgent?'<span style="background:var(--red);color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px">🚨 URGENT</span>':''}
+            </div>
+            <div class="convo-meta">${thread.business_name} · Last message: ${lastTime}</div>
+          </div>
+          <span style="font-size:12px;color:var(--gray)">${thread.messages.length} message${thread.messages.length>1?'s':''} ▾</span>
+        </div>
+        <div class="convo-body hidden">
+          ${msgs.map(m => {
+            const time = new Date(m.created_at).toLocaleString('en-US', {hour:'numeric',minute:'2-digit',month:'short',day:'numeric'});
+            const isOut = m.direction === 'outbound';
+            return `
+            <div>
+              <div class="msg-bubble ${isOut?'msg-outbound':'msg-inbound'} ${m.urgent?'msg-urgent':''}">
+                ${m.body}
+              </div>
+              <div class="msg-time ${isOut?'msg-time-right':''}">${isOut?'You (auto-text)':'Customer'} · ${time}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    body.innerHTML = `<div style="color:var(--red);padding:20px;font-size:13px">Error loading messages: ${e.message}</div>`;
+  }
+}
+
+// ── REPORTS ──
+
+function initReportMonths() {
+  const sel = document.getElementById('report-month-select');
+  if(!sel) return;
+  const months = [];
+  const now = new Date();
+  for(let i = 0; i < 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const label = d.toLocaleDateString('en-US', {month:'long', year:'numeric'});
+    const val = d.toISOString().slice(0,7);
+    months.push(`<option value="${val}"${i===0?' selected':''}>${label}</option>`);
+  }
+  sel.innerHTML = months.join('');
+}
+
+async function fetchCallLogs(monthVal) {
+  try {
+    const res = await fetch(`${SUPA_URL}/rest/v1/call_logs?month=eq.${monthVal}&select=*`, {
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': `Bearer ${SUPA_KEY}`
+      }
+    });
+    return await res.json();
+  } catch(e) {
+    console.error('Supabase fetch error:', e);
+    return [];
+  }
+}
+
+async function renderReports() {
+  const clients = leads.filter(l => l.stage === 'closed');
+  const body = document.getElementById('reports-body');
+  if(!body) return;
+
+  if(clients.length === 0) {
+    // Show demo report so you can see what it looks like
+    const demoClient = { id: 'demo', biz: 'Johnson HVAC', service: 'standard', fname: 'Johnson HVAC' };
+    const demoLogs = [
+      ...Array(8).fill(null).map((_,i) => ({ created_at: new Date(Date.now()-i*86400000*2).toISOString(), time_of_day: i%3===0?'after_hours':'business_hours', urgent: i===2, twilio_number:'+14695550001', customer_number:'+19725550001', business_name:'Johnson HVAC', direction:'inbound', body:'test', month: new Date().toISOString().slice(0,7) })),
+    ];
+    body.innerHTML = `<div style="background:#FFF7ED;border:1px solid #FCD34D;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:#92400E">📋 <strong>Demo report</strong> — this is what your client reports will look like. Add a client in Active Clients to see real data.</div>` + buildReport(demoClient, demoLogs, monthVal, monthLabel);
+    return;
+  }
+
+  const sel = document.getElementById('report-month-select');
+  const monthVal = sel ? sel.value : new Date().toISOString().slice(0,7);
+  const monthLabel = sel ? sel.options[sel.selectedIndex].text : new Date().toLocaleDateString('en-US',{month:'long',year:'numeric'});
+
+  body.innerHTML = `<div style="text-align:center;padding:40px;color:var(--gray);font-size:13px">Loading call data...</div>`;
+
+  const logs = await fetchCallLogs(monthVal);
+
+  body.innerHTML = clients.map(l => buildReport(l, logs, monthVal, monthLabel)).join('');
+}
+
+function buildReport(l, logs, monthVal, monthLabel) {
+  const clientLogs = logs.filter(log => log.business_name === (l.biz || l.fname));
+  const missed = clientLogs.length;
+  const sent = missed;
+  const bizHours = clientLogs.filter(log => log.time_of_day === 'business_hours').length;
+  const afterHours = clientLogs.filter(log => log.time_of_day === 'after_hours').length;
+  const urgent = clientLogs.filter(log => log.urgent === true).length;
+
+  // Booking estimate — show as range since we can't track bookings yet
+  const bookingLow = Math.max(1, Math.floor(missed * 0.2));
+  const bookingHigh = Math.floor(missed * 0.4);
+  const bookRate = missed > 0 ? Math.round((bookingLow / missed) * 100) : 0;
+
+  const fee = l.service === 'premium' ? 197 : 147;
+  const avgJob = l.service === 'premium' ? 850 : 650;
+  const recoveredLow = bookingLow * avgJob;
+  const recoveredHigh = bookingHigh * avgJob;
+  const roi = fee > 0 ? Math.round((recoveredLow / fee) * 100) : 0;
+
+  // Day of week breakdown from real logs
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const dayCounts = [0,0,0,0,0,0,0];
+  clientLogs.forEach(log => {
+    const d = new Date(log.created_at);
+    const day = (d.getDay() + 6) % 7; // shift so Mon=0
+    dayCounts[day]++;
+  });
+  const maxDay = Math.max(...dayCounts, 1);
+
+  const insights = [];
+  if(missed === 0) {
+    insights.push(`No missed calls logged yet for ${l.biz||l.fname} this month. Once calls come in they'll appear here automatically.`);
+  } else {
+    if(afterHours > bizHours * 0.35) insights.push(`After-hours calls are ${Math.round((afterHours/missed)*100)}% of volume — the 24/7 auto-text is actively recovering leads that would have gone to competitors.`);
+    if(bookRate >= 20) insights.push(`Even at a conservative 20% booking rate, the system is converting missed calls into booked jobs automatically.`);
+    if(urgent > 0) insights.push(`${urgent} URGENT/EMERGENCY text${urgent>1?'s were':' was'} flagged this month — make sure callbacks happened quickly to build trust.`);
+    insights.push(`At $${fee}/month, this service is estimated to have recovered $${recoveredLow.toLocaleString()}–$${recoveredHigh.toLocaleString()} in jobs — a ${roi}%+ return.`);
+  }
+
+  const tmplStr = (templates.biz||'Hi! Thanks for calling [BUSINESS NAME]. We\'re on a job — text URGENT for emergencies or book here: [BOOKING LINK]')
+    .replace('[BUSINESS NAME]', l.biz||'your business')
+    .replace('[BOOKING LINK]', twilio.booking||'[booking link]');
+
+  const noDataBar = missed === 0;
+
+  return `
+  <div class="report-wrap" id="report-${l.id}">
+    <div class="report-top">
+      <div>
+        <div class="report-biz">${l.biz || l.fname+' '+(l.lname||'')}</div>
+        <div class="report-sub">Missed Call Recovery Report · ${monthLabel}</div>
+        <div class="report-sub" style="margin-top:4px">${l.service==='premium'?'Premium':'Standard'} Plan · $${fee}/month</div>
+      </div>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,0.12);color:white;border:none;font-size:12px;cursor:pointer" onclick="printOne('${l.id}')">🖨️ Print</button>
+    </div>
+    <div class="report-body">
+      <div class="report-stats">
+        <div class="report-stat"><div class="report-stat-val">${missed}</div><div class="report-stat-label">Missed Calls</div></div>
+        <div class="report-stat"><div class="report-stat-val">${sent}</div><div class="report-stat-label">Texts Sent</div></div>
+        <div class="report-stat"><div class="report-stat-val" style="color:var(--green)">${missed>0?bookingLow+'–'+bookingHigh:'—'}</div><div class="report-stat-label">Est. Bookings</div></div>
+        <div class="report-stat"><div class="report-stat-val" style="color:var(--blue)">${urgent}</div><div class="report-stat-label">Urgent Flags</div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
+        <div>
+          <div class="report-section-title">Call Breakdown</div>
+          <div class="report-row"><span>Business hours (8am–6pm)</span><span>${bizHours}</span></div>
+          <div class="report-row"><span>After hours calls</span><span>${afterHours}</span></div>
+          <div class="report-row"><span>Urgent/emergency flags</span><span>${urgent}</span></div>
+          <div class="report-row"><span>Auto-text response rate</span><span>100%</span></div>
+        </div>
+        <div>
+          <div class="report-section-title">Revenue Impact</div>
+          <div class="report-row"><span>Est. bookings (20–40%)</span><span>${missed>0?bookingLow+'–'+bookingHigh+' jobs':'—'}</span></div>
+          <div class="report-row"><span>Avg job value</span><span>$${avgJob.toLocaleString()}</span></div>
+          <div class="report-row"><span style="font-weight:600">Est. revenue recovered</span><span style="color:var(--green)">${missed>0?'$'+recoveredLow.toLocaleString()+'–$'+recoveredHigh.toLocaleString():'—'}</span></div>
+          <div class="report-row"><span>Monthly service fee</span><span>$${fee}</span></div>
+          <div class="report-row"><span style="font-weight:600">Estimated ROI</span><span style="color:var(--blue)">${missed>0?roi+'%+':'—'}</span></div>
+        </div>
+      </div>
+
+      <div class="report-section">
+        <div class="report-section-title">Calls by Day of Week ${noDataBar?'(no data yet)':''}</div>
+        <div class="bar-chart">
+          ${days.map((d,i) => `
+            <div class="bar-col">
+              <div class="bar-fill" style="height:${noDataBar?8:Math.round((dayCounts[i]/maxDay)*44)+4}px;opacity:${noDataBar?0.2:1}"></div>
+              <div class="bar-label">${d}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <div class="report-section">
+        <div class="report-section-title">Key Insights</div>
+        ${insights.map(i => `<div class="report-insight">${i}</div>`).join('')}
+      </div>
+
+      <div class="report-section" style="margin-bottom:0">
+        <div class="report-section-title">Auto-Text Message</div>
+        <div class="report-sms-preview">"${tmplStr}"</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function printOne(id) {
+  const el = document.getElementById('report-'+id);
+  if(!el) return;
+  const win = window.open('', '_blank');
+  win.document.write(`<html><head><title>Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'DM Sans',sans-serif;padding:24px;color:#1A1A2E;background:white}
+    .report-wrap{border:1px solid #E5E7EB;border-radius:12px;overflow:hidden;max-width:780px;margin:0 auto}
+    .report-top{background:#1A1A2E;padding:20px 24px;color:white}
+    .report-biz{font-size:18px;font-weight:700}.report-sub{font-size:12px;color:rgba(255,255,255,0.5);margin-top:3px}
+    .report-body{padding:20px 24px}
+    .report-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+    .report-stat{background:#F3F4F6;border-radius:8px;padding:12px}
+    .report-stat-val{font-size:22px;font-weight:700}.report-stat-label{font-size:10px;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;margin-top:3px}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+    .report-section-title{font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid #E5E7EB}
+    .report-row{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid #F9FAFB}
+    .report-row span:last-child{font-weight:600}
+    .report-section{margin-bottom:18px}
+    .report-insight{background:#EEF2FF;border-radius:6px;padding:8px 12px;font-size:11px;color:#3730A3;margin-bottom:5px;line-height:1.5}
+    .report-sms-preview{background:#F3F4F6;border-radius:6px;padding:10px 12px;font-size:12px;font-style:italic;line-height:1.5}
+    .bar-chart{display:flex;gap:4px;align-items:flex-end;height:50px;margin:8px 0}
+    .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px}
+    .bar-fill{width:100%;background:#5B72E8;border-radius:2px 2px 0 0}
+    .bar-label{font-size:9px;color:#6B7280}
+    button{display:none!important}
+  </style></head><body>${el.outerHTML}</body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(() => { win.print(); win.close(); }, 500);
+}
+
+// ── TWILIO ──
+let twilio = JSON.parse(localStorage.getItem('lx_twilio') || '{}');
+twilio = Object.assign({sid:'',token:'',from:'',booking:''}, twilio);
+let templates = JSON.parse(localStorage.getItem('lx_tpl') || '{}');
+if(!templates.biz) templates.biz = "Hi! Thanks for calling [BUSINESS NAME]. We're currently on a job but we're here for you. For urgent requests text URGENT and we'll call you back as soon as possible. To book: [BOOKING LINK]";
+if(!templates.after) templates.after = "Hi! Thanks for calling [BUSINESS NAME]. We're closed right now but available for emergencies. Text EMERGENCY for urgent issues and we'll call you back as soon as possible. To book: [BOOKING LINK]";
+
+function renderTwilio() {
+  document.getElementById('tw-sid').value = twilio.sid||'';
+  document.getElementById('tw-token').value = twilio.token||'';
+  document.getElementById('tw-from').value = twilio.from||'';
+  document.getElementById('tw-booking').value = twilio.booking||'';
+  document.getElementById('sms-biz').value = templates.biz;
+  document.getElementById('sms-after').value = templates.after;
+  const status = document.getElementById('twilio-status');
+  if(twilio.sid) {
+    status.className = 'tw-status connected';
+    status.textContent = '✓ Credentials saved — Twilio connected';
+  }
+}
+
+function saveTwilio() {
+  twilio.sid = document.getElementById('tw-sid').value.trim();
+  twilio.token = document.getElementById('tw-token').value.trim();
+  twilio.from = document.getElementById('tw-from').value.trim();
+  twilio.booking = document.getElementById('tw-booking').value.trim();
+  localStorage.setItem('lx_twilio', JSON.stringify(twilio));
+  const status = document.getElementById('twilio-status');
+  if(twilio.sid) {
+    status.className = 'tw-status connected';
+    status.textContent = '✓ Credentials saved — Twilio connected';
+  }
+  alert('Twilio credentials saved!');
+}
+
+function saveTemplates() {
+  templates.biz = document.getElementById('sms-biz').value;
+  templates.after = document.getElementById('sms-after').value;
+  localStorage.setItem('lx_tpl', JSON.stringify(templates));
+  alert('Templates saved!');
+}
+
+function testTwilio() {
+  const res = document.getElementById('test-result');
+  if(!twilio.sid||!twilio.token||!twilio.from) {
+    res.className = 'test-result test-fail';
+    res.textContent = 'Save your Twilio credentials first.';
+    res.classList.remove('hidden');
+    return;
+  }
+  const toNumber = prompt('Enter your verified phone number (e.g. +12145551234):');
+  if(!toNumber) return;
+  res.className = 'test-result';
+  res.style.background = 'var(--light-gray)';
+  res.textContent = 'Sending test SMS...';
+  res.classList.remove('hidden');
+  const msg = `LaunchX Test ✓ Your missed call auto-text is working! Webhook: https://launchx-webhook.onrender.com`;
+  const body = new URLSearchParams({To: toNumber, From: twilio.from, Body: msg});
+  fetch(`https://api.twilio.com/2010-04-01/Accounts/${twilio.sid}/Messages.json`, {
+    method: 'POST',
+    headers: {'Authorization': 'Basic ' + btoa(twilio.sid+':'+twilio.token), 'Content-Type': 'application/x-www-form-urlencoded'},
+    body: body.toString()
+  }).then(r=>r.json()).then(d => {
+    if(d.sid) {
+      res.className = 'test-result test-ok';
+      res.textContent = '✓ Test SMS sent! Check your phone. SID: ' + d.sid;
+    } else {
+      res.className = 'test-result test-fail';
+      res.textContent = 'Error: ' + (d.message||'Check credentials and make sure destination number is verified in Twilio.');
+    }
+  }).catch(() => {
+    res.className = 'test-result test-fail';
+    res.textContent = 'Failed to send. Check your credentials.';
+  });
+}
+
+// ── BADGES ──
+function stageBadge(s) {
+  const map = { cold:'badge-cold', contacted:'badge-contacted', interested:'badge-interested', closed:'badge-closed' };
+  const labels = { cold:'Cold', contacted:'Contacted', interested:'Interested', closed:'Closed' };
+  return `<span class="badge ${map[s]||'badge-cold'}">${labels[s]||s}</span>`;
+}
+
+function serviceBadge(s) {
+  if(s==='standard') return `<span class="badge badge-standard">Standard</span>`;
+  if(s==='premium') return `<span class="badge badge-premium">Premium</span>`;
+  return `<span class="badge badge-none">—</span>`;
+}
+
+function paymentBadge(p) {
+  if(p==='paid') return `<span class="badge badge-paid">Paid</span>`;
+  if(p==='deposit') return `<span class="badge badge-deposit">Deposit</span>`;
+  return `<span class="badge badge-unpaid">Unpaid</span>`;
+}
+
+function formatDate(d) {
+  if(!d) return '—';
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+
+function isOverdue(d) {
+  if(!d) return false;
+  return new Date(d) < new Date(new Date().toDateString());
+}
+
+// ── TABLE ──
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderTable();
+}
+
+function renderTable() {
+  const search = (document.getElementById('search-input')?.value || '').toLowerCase();
+  let filtered = leads.filter(l => {
+    const matchFilter = currentFilter === 'all' || l.stage === currentFilter;
+    const matchSearch = !search || 
+      (l.fname+' '+l.lname).toLowerCase().includes(search) ||
+      (l.biz||'').toLowerCase().includes(search) ||
+      (l.phone||'').includes(search) ||
+      (l.email||'').toLowerCase().includes(search);
+    return matchFilter && matchSearch;
+  });
+
+  const label = document.getElementById('leads-count-label');
+  if(label) label.textContent = `${filtered.length} lead${filtered.length!==1?'s':''} total`;
+
+  const body = document.getElementById('leads-table-body');
+  if(!body) return;
+
+  if(filtered.length === 0) {
+    body.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">👥</div>
+      <div class="empty-title">No leads found</div>
+      <div class="empty-sub">Add your first lead or adjust your filters</div>
+    </div>`;
+    return;
+  }
+
+  body.innerHTML = filtered.map(l => `
+    <div class="table-row" onclick="openDetail('${l.id}')">
+      <div>
+        <div class="lead-name">${l.fname} ${l.lname||''}</div>
+        <div class="lead-biz">${l.biz||'—'}</div>
+      </div>
+      <div>
+        <div class="lead-contact">${l.phone||'—'}</div>
+        <div class="lead-contact-sub">${l.email||''}</div>
+      </div>
+      <div>${stageBadge(l.stage)}</div>
+      <div>${serviceBadge(l.service)}</div>
+      <div>${paymentBadge(l.payment)}</div>
+      <div style="font-size:12px;color:${isOverdue(l.followup)?'var(--red)':'var(--gray)'}">${formatDate(l.followup)}</div>
+      <div class="actions" onclick="event.stopPropagation()">
+        <button class="icon-btn" onclick="openEditModal('${l.id}')" title="Edit">✏️</button>
+        <button class="icon-btn" onclick="deleteLead('${l.id}')" title="Delete">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── DASHBOARD ──
+function renderDashboard() {
+  const total = leads.length;
+  const closed = leads.filter(l=>l.stage==='closed').length;
+  const interested = leads.filter(l=>l.stage==='interested').length;
+  const mrr = leads.filter(l=>l.stage==='closed').reduce((acc,l) => {
+    if(l.service==='standard') return acc+147;
+    if(l.service==='premium') return acc+197;
+    return acc;
+  }, 0);
+
+  const upcoming = leads.filter(l=>l.followup && !isOverdue(l.followup)).length;
+
+  const grid = document.getElementById('stats-grid');
+  grid.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Total Leads</div>
+      <div class="stat-value">${total}</div>
+      <div class="stat-sub">In pipeline</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Interested</div>
+      <div class="stat-value" style="color:var(--amber)">${interested}</div>
+      <div class="stat-sub">Hot leads</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Closed Clients</div>
+      <div class="stat-value" style="color:var(--green)">${closed}</div>
+      <div class="stat-sub">Active service</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Monthly Revenue</div>
+      <div class="stat-value" style="color:var(--blue)">$${mrr}</div>
+      <div class="stat-sub">Recurring/month</div>
+    </div>
+  `;
+
+  // Pipeline bar
+  const stages = ['cold','contacted','interested','closed'];
+  const colors = {'cold':'#D1D5DB','contacted':'#93C5FD','interested':'#FCD34D','closed':'#86EFAC'};
+  const bar = document.getElementById('pipeline-bar');
+  bar.innerHTML = stages.map(s => {
+    const count = leads.filter(l=>l.stage===s).length;
+    const pct = total > 0 ? (count/total)*100 : 0;
+    return `<div class="pipeline-seg" style="background:${colors[s]};flex:${pct||1}"></div>`;
+  }).join('');
+
+  const legend = document.getElementById('pipeline-legend');
+  legend.innerHTML = stages.map(s => {
+    const count = leads.filter(l=>l.stage===s).length;
+    return `<div class="legend-item"><div class="legend-dot" style="background:${colors[s]}"></div>${s.charAt(0).toUpperCase()+s.slice(1)} (${count})</div>`;
+  }).join('');
+
+  const mrrDisplay = document.getElementById('mrr-display');
+  mrrDisplay.textContent = '$' + mrr.toLocaleString();
+  document.getElementById('mrr-sub').textContent = `${closed} active client${closed!==1?'s':''} · $${mrr}/month recurring`;
+
+  // Follow ups
+  const upcoming_leads = leads
+    .filter(l=>l.followup)
+    .sort((a,b)=>new Date(a.followup)-new Date(b.followup))
+    .slice(0,5);
+
+  const fList = document.getElementById('followup-list-dash');
+  if(upcoming_leads.length === 0) {
+    fList.innerHTML = `<div style="color:var(--gray);font-size:13px;padding:10px 0">No follow ups scheduled</div>`;
+  } else {
+    const stageColors = {cold:'#D1D5DB',contacted:'#93C5FD',interested:'#FCD34D',closed:'#86EFAC'};
+    fList.innerHTML = upcoming_leads.map(l => `
+      <div class="followup-item" onclick="openDetail('${l.id}')" style="cursor:pointer">
+        <div class="followup-dot" style="background:${stageColors[l.stage]||'#D1D5DB'}"></div>
+        <div>
+          <div class="followup-name">${l.fname} ${l.lname||''}</div>
+          <div class="followup-info">${l.biz||'—'} · ${l.stage}</div>
+        </div>
+        <div class="followup-date" style="color:${isOverdue(l.followup)?'var(--red)':'var(--gray)'}">
+          ${formatDate(l.followup)}
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+// ── FOLLOW UPS ──
+function renderFollowups() {
+  const all = leads.filter(l=>l.followup).sort((a,b)=>new Date(a.followup)-new Date(b.followup));
+  const stageColors = {cold:'#D1D5DB',contacted:'#93C5FD',interested:'#FCD34D',closed:'#86EFAC'};
+  const list = document.getElementById('followup-list-full');
+  if(all.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-title">No follow ups scheduled</div><div class="empty-sub">Add follow up dates when creating leads</div></div>`;
+    return;
+  }
+  list.innerHTML = all.map(l => `
+    <div class="followup-item" onclick="openDetail('${l.id}')" style="cursor:pointer">
+      <div class="followup-dot" style="background:${stageColors[l.stage]||'#D1D5DB'}"></div>
+      <div style="flex:1">
+        <div class="followup-name">${l.fname} ${l.lname||''}</div>
+        <div class="followup-info">${l.biz||'—'} · ${stageBadge(l.stage)}</div>
+      </div>
+      <div class="followup-date" style="color:${isOverdue(l.followup)?'var(--red)':'var(--gray)'}">
+        ${isOverdue(l.followup)?'⚠️ ':''}${formatDate(l.followup)}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── CLIENTS (Supabase) ──
+let editingClientId = null;
+
+async function renderClients() {
+  const list = document.getElementById('clients-list');
+  if(!list) return;
+  list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--gray);font-size:13px">Loading clients...</div>`;
+  try {
+    const res = await fetch(`${SUPA_URL}/rest/v1/clients?select=*&order=created_at.desc`, {
+      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+    });
+    const clients = await res.json();
+    if(!clients.length) {
+      list.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">No clients yet</div><div class="empty-sub">Click "Add Client" to onboard your first client</div></div>`;
+      return;
+    }
+    list.innerHTML = clients.map(c => `
+      <div class="tw-card" style="margin-bottom:14px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap">
+              <div style="font-size:15px;font-weight:700;color:var(--dark)">${c.business_name}</div>
+              <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:${c.active?'var(--green-bg)':'#F3F4F6'};color:${c.active?'var(--green)':'var(--gray)'}">${c.active?'Active':'Paused'}</span>
+              <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--light-bg);color:var(--blue)">${c.plan==='premium'?'Premium $197':'Standard $147'}/mo</span>
+              <span id="health-${c.id}" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--light-gray);color:var(--gray)">⏳ Checking...</span>
+            </div>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--gray)">
+              <span>📱 <code style="font-size:11px">${c.twilio_number}</code></span>
+              <span>📞 Owner: <code style="font-size:11px">${c.owner_phone||'not set'}</code></span>
+              <span>🔗 <a href="${c.booking_link}" target="_blank" style="color:var(--blue)">${c.booking_link}</a></span>
+            </div>
+            <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div style="background:var(--light-gray);border-radius:8px;padding:8px 10px">
+                <div style="font-size:10px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px">Business Hours</div>
+                <div style="font-size:11px;color:var(--dark);line-height:1.5">${c.biz_hours_message||'Default message'}</div>
+              </div>
+              <div style="background:var(--light-gray);border-radius:8px;padding:8px 10px">
+                <div style="font-size:10px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px">After Hours</div>
+                <div style="font-size:11px;color:var(--dark);line-height:1.5">${c.after_hours_message||'Default message'}</div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0">
+            <button class="btn btn-secondary btn-sm" onclick="editClient(${c.id})">✏️ Edit</button>
+            <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:none;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:600" onclick="deleteClient(${c.id})">🗑️</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+    // Check health score for each client
+    clients.forEach(c => checkClientHealth(c));
+  } catch(e) {
+    list.innerHTML = `<div style="color:var(--red);padding:20px;font-size:13px">Error loading clients: ${e.message}</div>`;
+  }
+}
+
+function openClientModal(c) {
+  editingClientId = c ? c.id : null;
+  document.getElementById('client-modal-title').textContent = c ? 'Edit Client' : 'Add Client';
+  document.getElementById('c-biz').value = c?.business_name||'';
+  document.getElementById('c-number').value = c?.twilio_number||'';
+  document.getElementById('c-booking').value = c?.booking_link||'';
+  document.getElementById('c-tz').value = c?.timezone||'America/Chicago';
+  document.getElementById('c-plan').value = c?.plan||'standard';
+  document.getElementById('c-active').value = c?.active!==false?'true':'false';
+  document.getElementById('c-owner-phone').value = c?.owner_phone||'';
+  document.getElementById('c-biz-msg').value = c?.biz_hours_message||'';
+  document.getElementById('c-after-msg').value = c?.after_hours_message||'';
+  document.getElementById('client-modal').classList.remove('hidden');
+  document.getElementById('client-modal').style.display = 'flex';
+}
+
+function closeClientModal() {
+  document.getElementById('client-modal').classList.add('hidden');
+  document.getElementById('client-modal').style.display = 'none';
+  editingClientId = null;
+}
+
+async function editClient(id) {
+  try {
+    const res = await fetch(`${SUPA_URL}/rest/v1/clients?id=eq.${id}&select=*`, {
+      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+    });
+    const data = await res.json();
+    if(data && data[0]) openClientModal(data[0]);
+  } catch(e) { alert('Error loading client: ' + e.message); }
+}
+
+async function saveClient() {
+  const biz = document.getElementById('c-biz').value.trim();
+  const number = document.getElementById('c-number').value.trim();
+  const booking = document.getElementById('c-booking').value.trim();
+  if(!biz || !number || !booking) { alert('Business name, Twilio number, and booking link are required.'); return; }
+
+  const payload = {
+    business_name: biz,
+    twilio_number: number,
+    booking_link: booking,
+    timezone: document.getElementById('c-tz').value,
+    plan: document.getElementById('c-plan').value,
+    active: document.getElementById('c-active').value === 'true',
+    owner_phone: document.getElementById('c-owner-phone').value.trim() || null,
+    biz_hours_message: document.getElementById('c-biz-msg').value.trim(),
+    after_hours_message: document.getElementById('c-after-msg').value.trim(),
+  };
+
+  try {
+    let url = `${SUPA_URL}/rest/v1/clients`;
+    let method = 'POST';
+    let headers = { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
+    if(editingClientId) {
+      url += `?id=eq.${editingClientId}`;
+      method = 'PATCH';
+    }
+    const res = await fetch(url, { method, headers, body: JSON.stringify(payload) });
+    if(res.ok) {
+      closeClientModal();
+      renderClients();
+    } else {
+      const err = await res.json();
+      alert('Error saving: ' + (err.message || JSON.stringify(err)));
+    }
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function deleteClient(id) {
+  if(!confirm('Remove this client? Their call logs will remain.')) return;
+  try {
+    await fetch(`${SUPA_URL}/rest/v1/clients?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+    });
+    renderClients();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+// ── MODAL ──
+function openAddModal() {
+  editingId = null;
+  document.getElementById('modal-title').textContent = 'Add New Lead';
+  ['fname','lname','biz','phone','email','notes','followup'].forEach(f => {
+    document.getElementById('f-'+f).value = '';
+  });
+  document.getElementById('f-stage').value = 'cold';
+  document.getElementById('f-service').value = 'none';
+  document.getElementById('f-payment').value = 'unpaid';
+  document.getElementById('modal').classList.remove('hidden');
+}
+
+function openEditModal(id) {
+  const l = leads.find(x=>x.id===id);
+  if(!l) return;
+  editingId = id;
+  document.getElementById('modal-title').textContent = 'Edit Lead';
+  document.getElementById('f-fname').value = l.fname||'';
+  document.getElementById('f-lname').value = l.lname||'';
+  document.getElementById('f-biz').value = l.biz||'';
+  document.getElementById('f-phone').value = l.phone||'';
+  document.getElementById('f-email').value = l.email||'';
+  document.getElementById('f-stage').value = l.stage||'cold';
+  document.getElementById('f-service').value = l.service||'none';
+  document.getElementById('f-payment').value = l.payment||'unpaid';
+  document.getElementById('f-followup').value = l.followup||'';
+  document.getElementById('f-notes').value = (l.notes||[]).map(n=>n.text).join('\n')||'';
+  document.getElementById('modal').classList.remove('hidden');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.add('hidden');
+}
+
+function saveLead() {
+  const fname = document.getElementById('f-fname').value.trim();
+  const biz = document.getElementById('f-biz').value.trim();
+  if(!fname) { alert('First name is required'); return; }
+
+  const notesRaw = document.getElementById('f-notes').value.trim();
+
+  if(editingId) {
+    const idx = leads.findIndex(l=>l.id===editingId);
+    if(idx !== -1) {
+      leads[idx] = {
+        ...leads[idx],
+        fname, lname: document.getElementById('f-lname').value.trim(),
+        biz, phone: document.getElementById('f-phone').value.trim(),
+        email: document.getElementById('f-email').value.trim(),
+        stage: document.getElementById('f-stage').value,
+        service: document.getElementById('f-service').value,
+        payment: document.getElementById('f-payment').value,
+        followup: document.getElementById('f-followup').value,
+      };
+      if(notesRaw) {
+        const existing = leads[idx].notes||[];
+        const existingTexts = existing.map(n=>n.text);
+        notesRaw.split('\n').filter(Boolean).forEach(t => {
+          if(!existingTexts.includes(t)) existing.push({text:t, date: new Date().toLocaleDateString()});
+        });
+        leads[idx].notes = existing;
+      }
+    }
+  } else {
+    const notes = notesRaw ? notesRaw.split('\n').filter(Boolean).map(t => ({text:t, date: new Date().toLocaleDateString()})) : [];
+    leads.push({
+      id: genId(), fname, lname: document.getElementById('f-lname').value.trim(),
+      biz, phone: document.getElementById('f-phone').value.trim(),
+      email: document.getElementById('f-email').value.trim(),
+      stage: document.getElementById('f-stage').value,
+      service: document.getElementById('f-service').value,
+      payment: document.getElementById('f-payment').value,
+      followup: document.getElementById('f-followup').value,
+      notes, createdAt: new Date().toISOString()
+    });
+  }
+
+  save();
+  closeModal();
+  renderTable();
+  renderDashboard();
+  if(currentLeadId) openDetail(currentLeadId);
+}
+
+// ── DETAIL ──
+function openDetail(id) {
+  const l = leads.find(x=>x.id===id);
+  if(!l) return;
+  currentLeadId = id;
+
+  document.getElementById('dp-name').textContent = l.fname + ' ' + (l.lname||'');
+  document.getElementById('dp-biz').textContent = l.biz||'—';
+  document.getElementById('dp-phone').textContent = l.phone||'—';
+  document.getElementById('dp-email').textContent = l.email||'—';
+  document.getElementById('dp-stage').innerHTML = stageBadge(l.stage);
+  document.getElementById('dp-service').innerHTML = serviceBadge(l.service);
+  document.getElementById('dp-payment').innerHTML = paymentBadge(l.payment);
+  document.getElementById('dp-followup').textContent = formatDate(l.followup);
+
+  renderNotes(l);
+
+  document.getElementById('detail-overlay').classList.remove('hidden');
+  document.getElementById('detail-panel').classList.remove('hidden');
+}
+
+function renderNotes(l) {
+  const list = document.getElementById('dp-notes-list');
+  const notes = l.notes||[];
+  if(notes.length === 0) {
+    list.innerHTML = `<div style="color:var(--gray);font-size:12px;padding:8px 0">No notes yet</div>`;
+  } else {
+    list.innerHTML = notes.slice().reverse().map(n => `
+      <div class="note-box">
+        ${n.text}
+        <div class="note-date">${n.date}</div>
+      </div>
+    `).join('');
+  }
+}
+
+function addNote() {
+  const input = document.getElementById('new-note-input');
+  const text = input.value.trim();
+  if(!text || !currentLeadId) return;
+  const idx = leads.findIndex(l=>l.id===currentLeadId);
+  if(idx === -1) return;
+  if(!leads[idx].notes) leads[idx].notes = [];
+  leads[idx].notes.push({text, date: new Date().toLocaleDateString()});
+  save();
+  input.value = '';
+  renderNotes(leads[idx]);
+}
+
+function closeDetail() {
+  currentLeadId = null;
+  document.getElementById('detail-overlay').classList.add('hidden');
+  document.getElementById('detail-panel').classList.add('hidden');
+}
+
+function editCurrentLead() {
+  if(currentLeadId) openEditModal(currentLeadId);
+}
+
+function deleteCurrentLead() {
+  if(currentLeadId && confirm('Delete this lead?')) {
+    deleteLead(currentLeadId);
+    closeDetail();
+  }
+}
+
+function deleteLead(id) {
+  if(confirm('Delete this lead?')) {
+    leads = leads.filter(l=>l.id!==id);
+    save();
+    renderTable();
+    renderDashboard();
+    renderClients();
+  }
+}
+
+// ── INIT ──
+renderDashboard();
+renderTable();
+</script>
+</body>
+</html>
