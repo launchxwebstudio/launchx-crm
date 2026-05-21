@@ -458,6 +458,40 @@
 
   .section { display: none; }
   .section.active { display: block; }
+
+  /* CLIENT OVERVIEW */
+  .co-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+  .co-card {
+    background: white; border-radius: 14px; border: 1px solid var(--border);
+    padding: 18px 20px; position: relative; overflow: hidden;
+  }
+  .co-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; gap: 10px; }
+  .co-biz { font-size: 15px; font-weight: 700; color: var(--dark); }
+  .co-plan { font-size: 11px; font-weight: 600; color: var(--blue); background: var(--light-bg); padding: 2px 9px; border-radius: 20px; }
+  .co-status-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .co-pill { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
+  .co-pill-green { background: var(--green-bg); color: var(--green); }
+  .co-pill-red { background: var(--red-bg); color: var(--red); }
+  .co-pill-amber { background: #FFF7ED; color: #EA580C; }
+  .co-pill-gray { background: var(--light-gray); color: var(--gray); }
+  .co-pill-blue { background: var(--light-bg); color: var(--blue); }
+  .co-section-label { font-size: 10px; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .co-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+  .co-stat-box { background: var(--light-gray); border-radius: 8px; padding: 8px 10px; text-align: center; }
+  .co-stat-val { font-size: 18px; font-weight: 700; color: var(--dark); }
+  .co-stat-label { font-size: 10px; color: var(--gray); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
+  .co-progress-wrap { margin-bottom: 12px; }
+  .co-progress-bar { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; margin-top: 4px; }
+  .co-progress-fill { height: 100%; border-radius: 3px; background: var(--green); transition: width 0.3s; }
+  .co-ob-chips { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+  .co-ob-chip { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 12px; }
+  .co-ob-done { background: var(--green-bg); color: var(--green); }
+  .co-ob-todo { background: var(--light-gray); color: var(--gray); }
+  .co-divider { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+  .co-health-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .co-metric-row { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; }
+  .co-metric-row span:last-child { font-weight: 600; }
+  .co-accent-left { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
 </style>
 </head>
 <body>
@@ -487,6 +521,9 @@
     </div>
     <div class="nav-item" onclick="showSection('clients')">
       <span class="icon">✅</span> Active Clients
+    </div>
+    <div class="nav-item" onclick="showSection('clientoverview')">
+      <span class="icon">📋</span> Client Overview
     </div>
   </div>
   <div class="nav-section">
@@ -716,6 +753,18 @@
         <button class="btn btn-primary" onclick="saveClient()">💾 Save Client</button>
       </div>
     </div>
+  </div>
+
+  <!-- CLIENT OVERVIEW -->
+  <div id="section-clientoverview" class="section">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Client Overview</div>
+        <div class="page-subtitle" id="co-subtitle">Loading clients...</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="renderClientOverview()">🔄 Refresh</button>
+    </div>
+    <div id="client-overview-body"></div>
   </div>
 
   <!-- MONTHLY REPORTS -->
@@ -1030,6 +1079,7 @@ function showSection(name) {
   if (name === 'reports') renderReports();
   if (name === 'conversations') renderConversations();
   if (name === 'clients') renderClients();
+  if (name === 'clientoverview') renderClientOverview();
 }
 
 // ── URGENT BADGE POLLING ──
@@ -1938,7 +1988,147 @@ function saveMontlyUpdate(id) {
   }, 800);
 }
 
-// ── REVENUE TRACKER ──
+// ── CLIENT OVERVIEW ──
+async function renderClientOverview() {
+  const body = document.getElementById('client-overview-body');
+  const sub = document.getElementById('co-subtitle');
+  if(!body) return;
+  body.innerHTML = `<div style="color:var(--gray);font-size:13px;padding:20px 0">Loading...</div>`;
+  try {
+    const [clientsRes, logsRes] = await Promise.all([
+      fetch(`${SUPA_URL}/rest/v1/clients?select=*&order=business_name.asc`, {
+        headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+      }),
+      fetch(`${SUPA_URL}/rest/v1/call_logs?select=*&order=created_at.desc`, {
+        headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+      })
+    ]);
+    const clients = await clientsRes.json();
+    const allLogs = await logsRes.json().catch(() => []);
+
+    if(!clients.length) {
+      body.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">No clients yet</div><div class="empty-sub">Go to Active Clients to add your first client</div></div>`;
+      if(sub) sub.textContent = '0 clients';
+      return;
+    }
+
+    if(sub) sub.textContent = `${clients.length} active client${clients.length !== 1 ? 's' : ''}`;
+
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthLabel = now.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
+    const obItems = [
+      {key:'contract', label:'Contract'},
+      {key:'deposit', label:'Deposit'},
+      {key:'number', label:'Number'},
+      {key:'forwarding', label:'Forwarding'},
+      {key:'tested', label:'Tested'},
+      {key:'stripe', label:'Stripe'},
+    ];
+
+    body.innerHTML = `<div class="co-grid">${clients.map(c => {
+      // Call log stats for this client this month
+      const clientLogs = Array.isArray(allLogs) ? allLogs.filter(l => l.twilio_number === c.twilio_number) : [];
+      const monthLogs = clientLogs.filter(l => new Date(l.created_at) >= monthStart);
+      const missed = monthLogs.length;
+      const afterHours = monthLogs.filter(l => l.call_type === 'after_hours').length;
+      const urgent = monthLogs.filter(l => l.urgent).length;
+      const sent = monthLogs.filter(l => l.sms_sent).length;
+
+      const ob = c.onboarding || {};
+      const obDone = obItems.filter(i => ob[i.key]).length;
+      const obPct = Math.round((obDone / obItems.length) * 100);
+
+      const mrrPay = c.mrr_payment || 'active';
+      const setupPay = c.setup_payment || 'pending';
+      const fee = c.plan === 'premium' ? 197 : 147;
+
+      const avgJob = c.monthly_avg_job || c.avg_job_value || 650;
+      const clicks = c.monthly_clicks || null;
+      const estimatedBookings = clicks != null ? Math.round(clicks * 0.6) : Math.round(missed * 0.08);
+      const recoveredEst = estimatedBookings * avgJob;
+      const roi = fee > 0 ? Math.round((recoveredEst / fee) * 100) : 0;
+
+      // Health color: green = all good, amber = setup incomplete, red = payment issues
+      const isHealthy = mrrPay === 'active' && obDone >= 5;
+      const hasIssue = mrrPay === 'late' || setupPay === 'pending';
+      const accentColor = hasIssue ? 'var(--red)' : isHealthy ? 'var(--green)' : 'var(--amber)';
+
+      const lastCall = monthLogs.length > 0 ? new Date(monthLogs[0].created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : null;
+
+      return `
+      <div class="co-card">
+        <div class="co-accent-left" style="background:${accentColor}"></div>
+        <div class="co-card-header">
+          <div>
+            <div class="co-biz">${c.business_name}</div>
+            <div style="font-size:11px;color:var(--gray);margin-top:2px">📱 ${c.twilio_number}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+            <span class="co-plan">${c.plan === 'premium' ? 'Premium' : 'Standard'} · $${fee}/mo</span>
+            <span class="co-pill ${c.active ? 'co-pill-green' : 'co-pill-gray'}">${c.active ? '● Active' : '○ Paused'}</span>
+          </div>
+        </div>
+
+        <!-- Payment Status -->
+        <div class="co-status-bar">
+          <span class="co-pill ${mrrPay==='active'?'co-pill-green':mrrPay==='late'?'co-pill-red':'co-pill-gray'}">
+            ${mrrPay==='active'?'✓ Recurring':mrrPay==='late'?'🚨 Late':'⏸ Paused'}</span>
+          <span class="co-pill ${setupPay==='paid'?'co-pill-green':setupPay==='waived'?'co-pill-gray':'co-pill-amber'}">
+            ${setupPay==='paid'?'✓ $75 paid':setupPay==='waived'?'Setup waived':'⚠ $75 pending'}</span>
+          ${c.bitly_link ? '<span class="co-pill co-pill-blue">📊 Bitly set</span>' : '<span class="co-pill co-pill-gray">No Bitly</span>'}
+        </div>
+
+        <!-- This Month Stats -->
+        <div class="co-section-label">${monthLabel} — Call Activity</div>
+        <div class="co-stats">
+          <div class="co-stat-box">
+            <div class="co-stat-val">${missed}</div>
+            <div class="co-stat-label">Missed Calls</div>
+          </div>
+          <div class="co-stat-box">
+            <div class="co-stat-val">${sent}</div>
+            <div class="co-stat-label">Texts Sent</div>
+          </div>
+          <div class="co-stat-box">
+            <div class="co-stat-val" style="color:var(--red)">${urgent}</div>
+            <div class="co-stat-label">Urgent Flags</div>
+          </div>
+        </div>
+
+        <!-- Revenue Est -->
+        <div class="co-metric-row"><span>Booking link clicks</span><span>${clicks != null ? clicks + ' (real)' : '—'}</span></div>
+        <div class="co-metric-row"><span>Est. revenue recovered</span><span style="color:var(--green)">${missed > 0 || clicks ? '~$' + recoveredEst.toLocaleString() : '—'}</span></div>
+        <div class="co-metric-row"><span>Estimated ROI</span><span style="color:var(--blue)">${(missed > 0 || clicks) && roi > 0 ? roi + '%+' : '—'}</span></div>
+        ${lastCall ? `<div class="co-metric-row"><span>Last call</span><span>${lastCall}</span></div>` : ''}
+
+        <hr class="co-divider">
+
+        <!-- Onboarding Progress -->
+        <div class="co-progress-wrap">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="co-section-label">Onboarding — ${obDone}/${obItems.length}</div>
+            <span style="font-size:10px;font-weight:700;color:${obPct===100?'var(--green)':'var(--gray)'}">${obPct}%</span>
+          </div>
+          <div class="co-progress-bar"><div class="co-progress-fill" style="width:${obPct}%;background:${obPct===100?'var(--green)':'var(--blue)'}"></div></div>
+          <div class="co-ob-chips">
+            ${obItems.map(item => `<span class="co-ob-chip ${ob[item.key] ? 'co-ob-done' : 'co-ob-todo'}">${ob[item.key] ? '✓' : '○'} ${item.label}</span>`).join('')}
+          </div>
+        </div>
+
+        <div style="display:flex;gap:6px;margin-top:4px">
+          <button class="btn btn-secondary btn-sm" style="flex:1;font-size:11px" onclick="editClient(${c.id});showSection('clients')">✏️ Edit Config</button>
+          <button class="btn btn-sm" style="flex:1;font-size:11px;background:var(--light-bg);color:var(--blue);border:none;border-radius:8px;cursor:pointer;font-weight:600" onclick="document.getElementById('report-client-select') && (document.getElementById('report-client-select').value='${c.id}');showSection('reports');renderReports()">📈 View Report</button>
+        </div>
+      </div>`;
+    }).join('')}</div>`;
+  } catch(e) {
+    body.innerHTML = `<div style="color:var(--red);padding:20px;font-size:13px">Error loading overview: ${e.message}</div>`;
+  }
+}
+
+
 async function renderRevenueTracker() {
   const grid = document.getElementById('rev-tracker-grid');
   const payList = document.getElementById('rev-payment-list');
