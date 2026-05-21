@@ -1130,27 +1130,47 @@ async function fetchCallLogs(monthVal) {
 }
 
 async function renderReports() {
-  const clients = leads.filter(l => l.stage === 'closed');
   const body = document.getElementById('reports-body');
   if(!body) return;
 
-  if(clients.length === 0) {
-    // Show demo report so you can see what it looks like
-    const demoClient = { id: 'demo', biz: 'Johnson HVAC', service: 'standard', fname: 'Johnson HVAC' };
-    const demoLogs = [
-      ...Array(8).fill(null).map((_,i) => ({ created_at: new Date(Date.now()-i*86400000*2).toISOString(), time_of_day: i%3===0?'after_hours':'business_hours', urgent: i===2, twilio_number:'+14695550001', customer_number:'+19725550001', business_name:'Johnson HVAC', direction:'inbound', body:'test', month: new Date().toISOString().slice(0,7) })),
-    ];
-    body.innerHTML = `<div style="background:#FFF7ED;border:1px solid #FCD34D;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:#92400E">📋 <strong>Demo report</strong> — this is what your client reports will look like. Add a client in Active Clients to see real data.</div>` + buildReport(demoClient, demoLogs, monthVal, monthLabel);
-    return;
-  }
-
   const sel = document.getElementById('report-month-select');
   const monthVal = sel ? sel.value : new Date().toISOString().slice(0,7);
-  const monthLabel = sel ? sel.options[sel.selectedIndex].text : new Date().toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  const monthLabel = sel ? sel.options[sel.selectedIndex]?.text : new Date().toLocaleDateString('en-US',{month:'long',year:'numeric'});
 
-  body.innerHTML = `<div style="text-align:center;padding:40px;color:var(--gray);font-size:13px">Loading call data...</div>`;
+  body.innerHTML = `<div style="text-align:center;padding:40px;color:var(--gray);font-size:13px">Loading...</div>`;
 
-  const logs = await fetchCallLogs(monthVal);
+  // Always show demo first if no real clients
+  let clients = [];
+  try {
+    const res = await fetch(`${SUPA_URL}/rest/v1/clients?select=*&active=eq.true`, {
+      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+    });
+    clients = await res.json();
+    if(!Array.isArray(clients)) clients = [];
+  } catch(e) { clients = []; }
+
+  const logs = clients.length > 0 ? await fetchCallLogs(monthVal) : [];
+
+  if(clients.length === 0) {
+    const demoClient = { id: 'demo', biz: 'Johnson HVAC', service: 'standard', fname: 'Johnson HVAC', twilio_number: '+14695550001' };
+    const now = Date.now();
+    const demoLogs = Array.from({length:14}, (_,i) => ({
+      created_at: new Date(now - i*43200000).toISOString(),
+      time_of_day: i%3===0 ? 'after_hours' : 'business_hours',
+      urgent: i===2,
+      twilio_number: '+14695550001',
+      customer_number: '+1972555000'+i,
+      business_name: 'Johnson HVAC',
+      direction: 'inbound',
+      body: 'test',
+      month: monthVal
+    }));
+    body.innerHTML =
+      `<div style="background:#FFF7ED;border:1px solid #FCD34D;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:#92400E">
+        📋 <strong>Demo report</strong> — this is what your client reports will look like. Add a client in Active Clients to see real data.
+      </div>` + buildReport(demoClient, demoLogs, monthVal, monthLabel);
+    return;
+  }
 
   body.innerHTML = clients.map(l => buildReport(l, logs, monthVal, monthLabel)).join('');
 }
@@ -1863,6 +1883,7 @@ function deleteLead(id) {
 // ── INIT ──
 renderDashboard();
 renderTable();
+initReportMonths();
 </script>
 </body>
 </html>
