@@ -404,6 +404,49 @@
 
   .hidden { display: none !important; }
 
+  /* ONBOARDING CHECKLIST */
+  .onboard-list { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .onboard-item {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
+    cursor: pointer; border: 1px solid var(--border); background: var(--light-gray); color: var(--gray);
+    transition: all 0.15s; user-select: none;
+  }
+  .onboard-item.done { background: var(--green-bg); color: var(--green); border-color: #BBF7D0; }
+  .onboard-item.done::before { content: '✓ '; }
+  .onboard-item:not(.done)::before { content: '○ '; }
+
+  /* MONTHLY UPDATE PANEL */
+  .monthly-update-panel {
+    background: var(--light-bg); border: 1px solid #C7D2FE; border-radius: 10px;
+    padding: 12px 14px; margin-top: 12px;
+  }
+  .monthly-update-panel .mu-title {
+    font-size: 11px; font-weight: 700; color: var(--blue); text-transform: uppercase;
+    letter-spacing: 0.06em; margin-bottom: 10px;
+  }
+  .monthly-update-panel .mu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .monthly-update-panel input {
+    font-size: 12px; padding: 6px 10px; border: 1px solid #C7D2FE; border-radius: 7px;
+    font-family: 'DM Sans', sans-serif; width: 100%; background: white; color: var(--dark);
+  }
+  .monthly-update-panel label { font-size: 11px; color: var(--gray); font-weight: 600; display: block; margin-bottom: 3px; }
+
+  /* REVENUE TRACKER */
+  .rev-tracker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .rev-tracker-card {
+    background: white; border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;
+  }
+  .rev-tracker-card .rtc-label { font-size: 11px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .rev-tracker-card .rtc-val { font-size: 22px; font-weight: 700; color: var(--dark); }
+  .rev-tracker-card .rtc-sub { font-size: 11px; color: var(--gray); margin-top: 3px; }
+  .payment-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .payment-row:last-child { border-bottom: none; }
+  .pay-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .pay-late { background: var(--red); }
+  .pay-paid { background: var(--green); }
+  .pay-setup { background: var(--amber); }
+
   .tab-bar { display: flex; gap: 4px; background: var(--light-gray); padding: 4px; border-radius: 10px; margin-bottom: 20px; }
   .tab {
     flex: 1; padding: 8px; border-radius: 7px; border: none;
@@ -480,6 +523,17 @@
     </div>
 
     <div class="stats-grid" id="stats-grid"></div>
+
+    <!-- REVENUE TRACKER -->
+    <div class="tw-card" style="margin-bottom:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="rev-title" style="margin-bottom:0">Revenue Tracker</div>
+        <span style="font-size:11px;color:var(--gray)" id="rev-month-label"></span>
+      </div>
+      <div class="rev-tracker" id="rev-tracker-grid"></div>
+      <div class="rev-title" style="margin-bottom:10px;font-size:11px">Payment Status — Active Clients</div>
+      <div id="rev-payment-list"><div style="color:var(--gray);font-size:12px;padding:6px 0">Loading...</div></div>
+    </div>
 
     <div class="revenue-grid">
       <div class="rev-card">
@@ -609,6 +663,43 @@
           <label class="form-label">Client's Real Cell Number (E.164)</label>
           <input class="form-input" id="c-owner-phone" placeholder="+19725551234">
           <div style="font-size:11px;color:var(--gray);margin-top:4px">Customer replies get forwarded here. Client replies from this number go back to the customer.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bitly Tracking Link (for booking link clicks)</label>
+          <input class="form-input" id="c-bitly" placeholder="https://bit.ly/johnson-hvac">
+          <div style="font-size:11px;color:var(--gray);margin-top:4px">Create a unique Bitly link per client pointing to their booking URL. Bitly tracks how many people click it each month.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Avg Job Value ($)</label>
+          <input class="form-input" id="c-avg-job" type="number" placeholder="650">
+          <div style="font-size:11px;color:var(--gray);margin-top:4px">Ask client what their average job is worth. Used to calculate estimated revenue recovered in reports.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">$75 Setup Payment</label>
+          <select class="form-select" id="c-setup-pay">
+            <option value="pending">Pending</option>
+            <option value="paid">Paid</option>
+            <option value="waived">Waived</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Monthly Recurring Payment</label>
+          <select class="form-select" id="c-mrr-pay">
+            <option value="active">Active (Stripe recurring)</option>
+            <option value="late">Late / Not set up</option>
+            <option value="paused">Paused</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font-size:12px;font-weight:700;color:var(--dark);margin-bottom:10px">Onboarding Checklist</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer"><input type="checkbox" id="ob-contract"> Contract signed</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer"><input type="checkbox" id="ob-deposit"> Deposit paid ($75)</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer"><input type="checkbox" id="ob-number"> Twilio number bought</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer"><input type="checkbox" id="ob-forwarding"> Call forwarding set up</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer"><input type="checkbox" id="ob-tested"> First call tested</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer"><input type="checkbox" id="ob-stripe"> Stripe recurring sent</label>
         </div>
       </div>
       <div class="form-group" style="margin-bottom:12px">
@@ -1152,7 +1243,7 @@ async function renderReports() {
   const logs = clients.length > 0 ? await fetchCallLogs(monthVal) : [];
 
   if(clients.length === 0) {
-    const demoClient = { id: 'demo', biz: 'Johnson HVAC', service: 'standard', fname: 'Johnson HVAC', twilio_number: '+14695550001' };
+    const demoClient = { id: 'demo', business_name: 'Johnson HVAC', plan: 'standard', twilio_number: '+14695550001', avg_job_value: 650, monthly_clicks: 6 };
     const now = Date.now();
     const demoLogs = Array.from({length:14}, (_,i) => ({
       created_at: new Date(now - i*43200000).toISOString(),
@@ -1176,23 +1267,28 @@ async function renderReports() {
 }
 
 function buildReport(l, logs, monthVal, monthLabel) {
-  const clientLogs = logs.filter(log => log.business_name === (l.biz || l.fname));
+  const clientLogs = logs.filter(log => log.business_name === (l.business_name || l.biz || l.fname));
   const missed = clientLogs.length;
   const sent = missed;
   const bizHours = clientLogs.filter(log => log.time_of_day === 'business_hours').length;
   const afterHours = clientLogs.filter(log => log.time_of_day === 'after_hours').length;
   const urgent = clientLogs.filter(log => log.urgent === true).length;
 
-  // Booking estimate — show as range since we can't track bookings yet
-  const bookingLow = Math.max(1, Math.floor(missed * 0.2));
-  const bookingHigh = Math.floor(missed * 0.4);
-  const bookRate = missed > 0 ? Math.round((bookingLow / missed) * 100) : 0;
+  // Real clicks from monthly update, fall back to estimate
+  const realClicks = l.monthly_clicks != null ? parseInt(l.monthly_clicks) : null;
+  const hasRealClicks = realClicks != null;
+  const clicksDisplay = hasRealClicks ? realClicks : (missed > 0 ? Math.floor(missed * 0.3) : 0);
+  const clickRate = missed > 0 ? Math.round((clicksDisplay / missed) * 100) : 0;
 
-  const fee = l.service === 'premium' ? 197 : 147;
-  const avgJob = l.service === 'premium' ? 850 : 650;
-  const recoveredLow = bookingLow * avgJob;
-  const recoveredHigh = bookingHigh * avgJob;
-  const roi = fee > 0 ? Math.round((recoveredLow / fee) * 100) : 0;
+  // Avg job value: monthly override → client setting → plan default
+  const avgJob = parseInt(l.monthly_avg_job || l.avg_job_value || (l.plan === 'premium' ? 850 : 650));
+  const fee = l.plan === 'premium' ? 197 : 147;
+
+  // Revenue estimate based on clicks × avg job × ~60% booking rate
+  const bookingRate = 0.6;
+  const estimatedBookings = Math.max(hasRealClicks ? Math.round(realClicks * bookingRate) : Math.floor(missed * 0.25), missed > 0 ? 1 : 0);
+  const recoveredEst = hasRealClicks ? Math.round(realClicks * bookingRate * avgJob) : estimatedBookings * avgJob;
+  const roi = fee > 0 ? Math.round((recoveredEst / fee) * 100) : 0;
 
   // Day of week breakdown from real logs
   const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -1206,17 +1302,22 @@ function buildReport(l, logs, monthVal, monthLabel) {
 
   const insights = [];
   if(missed === 0) {
-    insights.push(`No missed calls logged yet for ${l.biz||l.fname} this month. Once calls come in they'll appear here automatically.`);
+    insights.push(`No missed calls logged yet for ${l.business_name||l.biz||l.fname} this month. Once calls come in they'll appear here automatically.`);
   } else {
     if(afterHours > bizHours * 0.35) insights.push(`After-hours calls are ${Math.round((afterHours/missed)*100)}% of volume — the 24/7 auto-text is actively recovering leads that would have gone to competitors.`);
-    if(bookRate >= 20) insights.push(`Even at a conservative 20% booking rate, the system is converting missed calls into booked jobs automatically.`);
-    if(urgent > 0) insights.push(`${urgent} URGENT/EMERGENCY text${urgent>1?'s were':' was'} flagged this month — make sure callbacks happened quickly to build trust.`);
-    insights.push(`At $${fee}/month, this service is estimated to have recovered $${recoveredLow.toLocaleString()}–$${recoveredHigh.toLocaleString()} in jobs — a ${roi}%+ return.`);
+    if(hasRealClicks) {
+      insights.push(`${realClicks} people clicked your booking link this month — that's ${realClicks} warm leads who took action after a missed call.`);
+      if(realClicks > 0) insights.push(`At $${avgJob}/job avg and ~60% close rate, that's an estimated $${recoveredEst.toLocaleString()} recovered — a ${roi}%+ return on your $${fee}/month.`);
+    } else {
+      insights.push(`Update this month's Bitly clicks in Active Clients for exact booking link data. Showing estimated figures for now.`);
+      if(estimatedBookings > 0) insights.push(`At $${avgJob.toLocaleString()} average job value, estimated revenue recovered this month: ~$${recoveredEst.toLocaleString()} — a ${roi}%+ ROI.`);
+    }
+    if(urgent > 0) insights.push(`${urgent} URGENT/EMERGENCY text${urgent>1?'s were':' was'} flagged this month — make sure callbacks happened quickly.`);
   }
 
   const tmplStr = (templates.biz||'Hi! Thanks for calling [BUSINESS NAME]. We\'re on a job — text URGENT for emergencies or book here: [BOOKING LINK]')
-    .replace('[BUSINESS NAME]', l.biz||'your business')
-    .replace('[BOOKING LINK]', twilio.booking||'[booking link]');
+    .replace('[BUSINESS NAME]', l.business_name||l.biz||'your business')
+    .replace('[BOOKING LINK]', l.booking_link||twilio.booking||'[booking link]');
 
   const noDataBar = missed === 0;
 
@@ -1224,9 +1325,9 @@ function buildReport(l, logs, monthVal, monthLabel) {
   <div class="report-wrap" id="report-${l.id}">
     <div class="report-top">
       <div>
-        <div class="report-biz">${l.biz || l.fname+' '+(l.lname||'')}</div>
+        <div class="report-biz">${l.business_name || l.biz || (l.fname+' '+(l.lname||''))}</div>
         <div class="report-sub">Missed Call Recovery Report · ${monthLabel}</div>
-        <div class="report-sub" style="margin-top:4px">${l.service==='premium'?'Premium':'Standard'} Plan · $${fee}/month</div>
+        <div class="report-sub" style="margin-top:4px">${l.plan==='premium'?'Premium':'Standard'} Plan · $${fee}/month</div>
       </div>
       <button class="btn btn-sm" style="background:rgba(255,255,255,0.12);color:white;border:none;font-size:12px;cursor:pointer" onclick="printOne('${l.id}')">🖨️ Print</button>
     </div>
@@ -1234,7 +1335,7 @@ function buildReport(l, logs, monthVal, monthLabel) {
       <div class="report-stats">
         <div class="report-stat"><div class="report-stat-val">${missed}</div><div class="report-stat-label">Missed Calls</div></div>
         <div class="report-stat"><div class="report-stat-val">${sent}</div><div class="report-stat-label">Texts Sent</div></div>
-        <div class="report-stat"><div class="report-stat-val" style="color:var(--green)">${missed>0?bookingLow+'–'+bookingHigh:'—'}</div><div class="report-stat-label">Est. Bookings</div></div>
+        <div class="report-stat"><div class="report-stat-val" style="color:var(--green)">${missed>0?clicksDisplay:'—'}</div><div class="report-stat-label">${hasRealClicks?'Real Clicks':'Est. Clicks'}</div></div>
         <div class="report-stat"><div class="report-stat-val" style="color:var(--blue)">${urgent}</div><div class="report-stat-label">Urgent Flags</div></div>
       </div>
 
@@ -1245,12 +1346,14 @@ function buildReport(l, logs, monthVal, monthLabel) {
           <div class="report-row"><span>After hours calls</span><span>${afterHours}</span></div>
           <div class="report-row"><span>Urgent/emergency flags</span><span>${urgent}</span></div>
           <div class="report-row"><span>Auto-text response rate</span><span>100%</span></div>
+          <div class="report-row"><span>Booking link click rate</span><span>${missed>0?clickRate+'%':'—'}</span></div>
         </div>
         <div>
           <div class="report-section-title">Revenue Impact</div>
-          <div class="report-row"><span>Est. bookings (20–40%)</span><span>${missed>0?bookingLow+'–'+bookingHigh+' jobs':'—'}</span></div>
-          <div class="report-row"><span>Avg job value</span><span>$${avgJob.toLocaleString()}</span></div>
-          <div class="report-row"><span style="font-weight:600">Est. revenue recovered</span><span style="color:var(--green)">${missed>0?'$'+recoveredLow.toLocaleString()+'–$'+recoveredHigh.toLocaleString():'—'}</span></div>
+          <div class="report-row"><span>Booking link clicks</span><span>${missed>0?clicksDisplay+(hasRealClicks?' (real)':' (est.)'):'—'}</span></div>
+          <div class="report-row"><span>Avg job value</span><span>$${avgJob.toLocaleString()}${l.monthly_avg_job?' (this month)':l.avg_job_value?' (from profile)':' (default)'}</span></div>
+          <div class="report-row"><span>Est. bookings (~60% close)</span><span>${missed>0?estimatedBookings+' jobs':'—'}</span></div>
+          <div class="report-row"><span style="font-weight:600">Est. revenue recovered</span><span style="color:var(--green)">${missed>0?'~$'+recoveredEst.toLocaleString():'—'}</span></div>
           <div class="report-row"><span>Monthly service fee</span><span>$${fee}</span></div>
           <div class="report-row"><span style="font-weight:600">Estimated ROI</span><span style="color:var(--blue)">${missed>0?roi+'%+':'—'}</span></div>
         </div>
@@ -1479,6 +1582,7 @@ function renderTable() {
 
 // ── DASHBOARD ──
 function renderDashboard() {
+  renderRevenueTracker();
   const total = leads.length;
   const closed = leads.filter(l=>l.stage==='closed').length;
   const interested = leads.filter(l=>l.stage==='interested').length;
@@ -1599,21 +1703,60 @@ async function renderClients() {
       list.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">No clients yet</div><div class="empty-sub">Click "Add Client" to onboard your first client</div></div>`;
       return;
     }
-    list.innerHTML = clients.map(c => `
+    list.innerHTML = clients.map(c => {
+      const ob = c.onboarding || {};
+      const obItems = [
+        {key:'contract', label:'Contract signed'},
+        {key:'deposit', label:'Deposit paid'},
+        {key:'number', label:'Number bought'},
+        {key:'forwarding', label:'Forwarding set'},
+        {key:'tested', label:'Call tested'},
+        {key:'stripe', label:'Stripe sent'},
+      ];
+      const obDone = obItems.filter(i=>ob[i.key]).length;
+      const obTotal = obItems.length;
+      const setupPay = c.setup_payment || 'pending';
+      const mrrPay = c.mrr_payment || 'active';
+      const month = new Date().toLocaleString('en-US',{month:'long',year:'numeric'});
+
+      return `
       <div class="tw-card" style="margin-bottom:14px">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
-          <div style="flex:1">
+          <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap">
               <div style="font-size:15px;font-weight:700;color:var(--dark)">${c.business_name}</div>
               <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:${c.active?'var(--green-bg)':'#F3F4F6'};color:${c.active?'var(--green)':'var(--gray)'}">${c.active?'Active':'Paused'}</span>
               <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--light-bg);color:var(--blue)">${c.plan==='premium'?'Premium $197':'Standard $147'}/mo</span>
               <span id="health-${c.id}" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--light-gray);color:var(--gray)">⏳ Checking...</span>
             </div>
-            <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--gray)">
+            <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--gray);margin-bottom:8px">
               <span>📱 <code style="font-size:11px">${c.twilio_number}</code></span>
               <span>📞 Owner: <code style="font-size:11px">${c.owner_phone||'not set'}</code></span>
               <span>🔗 <a href="${c.booking_link}" target="_blank" style="color:var(--blue)">${c.booking_link}</a></span>
+              ${c.bitly_link ? `<span>📊 <a href="${c.bitly_link}" target="_blank" style="color:var(--blue)">Bitly tracker ↗</a></span>` : '<span style="color:#FCA5A5">⚠️ No Bitly link</span>'}
+              ${c.avg_job_value ? `<span>💰 Avg job: <strong>$${parseInt(c.avg_job_value).toLocaleString()}</strong></span>` : '<span style="color:#FCA5A5">⚠️ No avg job value</span>'}
             </div>
+
+            <!-- Payment Status -->
+            <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+              <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:${setupPay==='paid'?'var(--green-bg)':setupPay==='waived'?'#F3F4F6':'#FFF7ED'};color:${setupPay==='paid'?'var(--green)':setupPay==='waived'?'var(--gray)':'#EA580C'}">
+                ${setupPay==='paid'?'✓ $75 setup paid':setupPay==='waived'?'Setup waived':'⚠️ $75 setup pending'}
+              </span>
+              <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:${mrrPay==='active'?'var(--green-bg)':mrrPay==='late'?'var(--red-bg)':'#F3F4F6'};color:${mrrPay==='active'?'var(--green)':mrrPay==='late'?'var(--red)':'var(--gray)'}">
+                ${mrrPay==='active'?'✓ Recurring active':mrrPay==='late'?'🚨 Payment late':'Paused'}
+              </span>
+            </div>
+
+            <!-- Onboarding Checklist -->
+            <div style="margin-bottom:10px">
+              <div style="font-size:11px;font-weight:600;color:var(--gray);margin-bottom:5px">Onboarding — ${obDone}/${obTotal} complete</div>
+              <div class="onboard-list">
+                ${obItems.map(item => `
+                  <div class="onboard-item ${ob[item.key]?'done':''}" onclick="toggleOnboarding(${c.id},'${item.key}')">${item.label}</div>
+                `).join('')}
+              </div>
+            </div>
+
             <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
               <div style="background:var(--light-gray);border-radius:8px;padding:8px 10px">
                 <div style="font-size:10px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px">Business Hours</div>
@@ -1624,14 +1767,30 @@ async function renderClients() {
                 <div style="font-size:11px;color:var(--dark);line-height:1.5">${c.after_hours_message||'Default message'}</div>
               </div>
             </div>
+
+            <!-- Monthly Update Panel -->
+            <div class="monthly-update-panel">
+              <div class="mu-title">📋 Monthly Update — ${month}</div>
+              <div class="mu-grid">
+                <div>
+                  <label>Booking link clicks (from Bitly)</label>
+                  <input type="number" id="mu-clicks-${c.id}" placeholder="e.g. 6" value="${c.monthly_clicks||''}" oninput="saveMontlyUpdate(${c.id})">
+                </div>
+                <div>
+                  <label>Avg job value this month ($)</label>
+                  <input type="number" id="mu-job-${c.id}" placeholder="e.g. 750" value="${c.monthly_avg_job||c.avg_job_value||''}" oninput="saveMontlyUpdate(${c.id})">
+                </div>
+              </div>
+              <div style="font-size:10px;color:var(--blue);margin-top:6px">Enter after your monthly check-in call → report updates automatically</div>
+            </div>
           </div>
           <div style="display:flex;gap:8px;flex-shrink:0">
             <button class="btn btn-secondary btn-sm" onclick="editClient(${c.id})">✏️ Edit</button>
             <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:none;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:600" onclick="deleteClient(${c.id})">🗑️</button>
           </div>
         </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
     // Check health score for each client
     clients.forEach(c => checkClientHealth(c));
   } catch(e) {
@@ -1651,6 +1810,16 @@ function openClientModal(c) {
   document.getElementById('c-owner-phone').value = c?.owner_phone||'';
   document.getElementById('c-biz-msg').value = c?.biz_hours_message||'';
   document.getElementById('c-after-msg').value = c?.after_hours_message||'';
+  document.getElementById('c-bitly').value = c?.bitly_link||'';
+  document.getElementById('c-avg-job').value = c?.avg_job_value||'';
+  document.getElementById('c-setup-pay').value = c?.setup_payment||'pending';
+  document.getElementById('c-mrr-pay').value = c?.mrr_payment||'active';
+  // Onboarding checkboxes
+  const ob = c?.onboarding || {};
+  ['contract','deposit','number','forwarding','tested','stripe'].forEach(k => {
+    const el = document.getElementById('ob-'+k);
+    if(el) el.checked = !!ob[k];
+  });
   document.getElementById('client-modal').classList.remove('hidden');
   document.getElementById('client-modal').style.display = 'flex';
 }
@@ -1677,6 +1846,13 @@ async function saveClient() {
   const booking = document.getElementById('c-booking').value.trim();
   if(!biz || !number || !booking) { alert('Business name, Twilio number, and booking link are required.'); return; }
 
+  const ob = {};
+  ['contract','deposit','number','forwarding','tested','stripe'].forEach(k => {
+    ob[k] = !!(document.getElementById('ob-'+k)?.checked);
+  });
+
+  const avgJobRaw = document.getElementById('c-avg-job').value.trim();
+
   const payload = {
     business_name: biz,
     twilio_number: number,
@@ -1687,6 +1863,11 @@ async function saveClient() {
     owner_phone: document.getElementById('c-owner-phone').value.trim() || null,
     biz_hours_message: document.getElementById('c-biz-msg').value.trim(),
     after_hours_message: document.getElementById('c-after-msg').value.trim(),
+    bitly_link: document.getElementById('c-bitly').value.trim() || null,
+    avg_job_value: avgJobRaw ? parseInt(avgJobRaw) : null,
+    setup_payment: document.getElementById('c-setup-pay').value,
+    mrr_payment: document.getElementById('c-mrr-pay').value,
+    onboarding: ob,
   };
 
   try {
@@ -1717,6 +1898,112 @@ async function deleteClient(id) {
     });
     renderClients();
   } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function toggleOnboarding(id, key) {
+  try {
+    // Fetch current client
+    const res = await fetch(`${SUPA_URL}/rest/v1/clients?id=eq.${id}&select=onboarding`, {
+      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+    });
+    const data = await res.json();
+    const ob = (data && data[0] && data[0].onboarding) || {};
+    ob[key] = !ob[key];
+    await fetch(`${SUPA_URL}/rest/v1/clients?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ onboarding: ob })
+    });
+    renderClients();
+  } catch(e) { console.error('Toggle onboarding error:', e); }
+}
+
+// Debounce timer for monthly update saves
+const _muTimers = {};
+function saveMontlyUpdate(id) {
+  clearTimeout(_muTimers[id]);
+  _muTimers[id] = setTimeout(async () => {
+    const clicks = document.getElementById(`mu-clicks-${id}`)?.value.trim();
+    const job = document.getElementById(`mu-job-${id}`)?.value.trim();
+    try {
+      await fetch(`${SUPA_URL}/rest/v1/clients?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({
+          monthly_clicks: clicks ? parseInt(clicks) : null,
+          monthly_avg_job: job ? parseInt(job) : null,
+        })
+      });
+    } catch(e) { console.error('Monthly update save error:', e); }
+  }, 800);
+}
+
+// ── REVENUE TRACKER ──
+async function renderRevenueTracker() {
+  const grid = document.getElementById('rev-tracker-grid');
+  const payList = document.getElementById('rev-payment-list');
+  const label = document.getElementById('rev-month-label');
+  if(!grid) return;
+
+  const month = new Date().toLocaleString('en-US',{month:'long',year:'numeric'});
+  if(label) label.textContent = month;
+
+  try {
+    const res = await fetch(`${SUPA_URL}/rest/v1/clients?select=*&active=eq.true&order=business_name`, {
+      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+    });
+    const clients = await res.json();
+    if(!Array.isArray(clients) || clients.length === 0) {
+      grid.innerHTML = `<div style="color:var(--gray);font-size:12px;grid-column:1/-1">No active clients yet</div>`;
+      payList.innerHTML = '';
+      return;
+    }
+
+    const mrr = clients.reduce((acc, c) => acc + (c.plan === 'premium' ? 197 : 147), 0);
+    const lateMrr = clients.filter(c => c.mrr_payment === 'late').length;
+    const setupPending = clients.filter(c => c.setup_payment === 'pending').length;
+
+    grid.innerHTML = `
+      <div class="rev-tracker-card">
+        <div class="rtc-label">Total MRR</div>
+        <div class="rtc-val" style="color:var(--blue)">$${mrr.toLocaleString()}</div>
+        <div class="rtc-sub">${clients.length} active client${clients.length!==1?'s':''}</div>
+      </div>
+      <div class="rev-tracker-card">
+        <div class="rtc-label">Paid This Month</div>
+        <div class="rtc-val" style="color:var(--green)">${clients.filter(c=>c.mrr_payment==='active').length}</div>
+        <div class="rtc-sub">Stripe recurring active</div>
+      </div>
+      <div class="rev-tracker-card" style="${lateMrr>0?'border-color:var(--red);background:var(--red-bg)':''}">
+        <div class="rtc-label" style="${lateMrr>0?'color:var(--red)':''}">Late / Issues</div>
+        <div class="rtc-val" style="color:${lateMrr>0?'var(--red)':'var(--gray)'}">${lateMrr}</div>
+        <div class="rtc-sub">${setupPending} setup payment${setupPending!==1?'s':''} pending</div>
+      </div>
+    `;
+
+    payList.innerHTML = clients.map(c => {
+      const mrrOk = c.mrr_payment === 'active';
+      const setupOk = c.setup_payment === 'paid' || c.setup_payment === 'waived';
+      return `
+      <div class="payment-row">
+        <div style="display:flex;align-items:center;gap:8px;flex:1">
+          <div class="pay-dot ${mrrOk?'pay-paid':'pay-late'}"></div>
+          <span style="font-weight:600">${c.business_name}</span>
+          <span style="color:var(--gray)">${c.plan==='premium'?'$197':'$147'}/mo</span>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;background:${mrrOk?'var(--green-bg)':'var(--red-bg)'};color:${mrrOk?'var(--green)':'var(--red)'}">
+            ${mrrOk?'✓ Recurring':'Late'}
+          </span>
+          <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;background:${setupOk?'#F3F4F6':'#FFF7ED'};color:${setupOk?'var(--gray)':'#EA580C'}">
+            ${c.setup_payment==='paid'?'$75 paid':c.setup_payment==='waived'?'Waived':'$75 due'}
+          </span>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    grid.innerHTML = `<div style="color:var(--red);font-size:12px;grid-column:1/-1">Error loading: ${e.message}</div>`;
+  }
 }
 
 // ── MODAL ──
