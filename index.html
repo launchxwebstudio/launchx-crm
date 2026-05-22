@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LaunchX CRM</title>
+<title>Harris Reserve CRM</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
@@ -500,10 +500,16 @@
 <div class="sidebar">
   <div class="logo">
     <div class="logo-name">
-      <div class="logo-icon">🚀</div>
+      <div class="logo-icon" style="background:#0d2535;border:1px solid rgba(74,143,168,0.4);">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="26" height="26">
+          <rect x="8" y="8" width="16" height="16" rx="1" fill="none" stroke="#4a8fa8" stroke-width="1.5" transform="rotate(45 16 16)"/>
+          <rect x="11" y="11" width="10" height="10" rx="1" fill="#7bbdd4" opacity="0.7" transform="rotate(45 16 16)"/>
+          <rect x="13" y="13" width="6" height="6" fill="#4a8fa8" transform="rotate(45 16 16)"/>
+        </svg>
+      </div>
       <div>
-        <div>Launch<span>X</span></div>
-        <div class="logo-sub">Web Studio CRM</div>
+        <div style="color:white;">Harris <span style="color:#4a8fa8;">Reserve</span></div>
+        <div class="logo-sub">Digital Services CRM</div>
       </div>
     </div>
   </div>
@@ -541,7 +547,7 @@
   </div>
 
   <div class="sidebar-footer">
-    <div class="sidebar-footer-text">LaunchX Web Studio</div>
+    <div class="sidebar-footer-text">Harris Reserve Digital Services</div>
     <div class="sidebar-footer-text">Landon Harris</div>
   </div>
 </div>
@@ -850,12 +856,12 @@
           <input class="form-input" id="tw-token" type="password" placeholder="••••••••••••••••••••••••••••••••">
         </div>
         <div class="form-group">
-          <label class="form-label">Your LaunchX Twilio Number</label>
+          <label class="form-label">Your Harris Reserve Twilio Number</label>
           <input class="form-input" id="tw-from" placeholder="+14694527134">
         </div>
         <div class="form-group">
           <label class="form-label">Default Booking Link</label>
-          <input class="form-input" id="tw-booking" placeholder="https://launchxwebstudio.netlify.app">
+          <input class="form-input" id="tw-booking" placeholder="https://harrisreserve.com">
         </div>
       </div>
       <div style="display:flex;gap:10px">
@@ -947,7 +953,7 @@
     <!-- SMS TEMPLATES -->
     <div class="tw-card">
       <div class="tw-card-title">SMS Message Templates</div>
-      <div style="font-size:12px;color:var(--gray);margin-bottom:14px">Reference templates used in monthly reports. Live messages are in <a href="https://github.com/launchxwebstudio/launchx-webhook/blob/main/index.js" target="_blank" style="color:var(--blue);font-family:'DM Mono',monospace;font-size:11px">index.js</a> on GitHub.</div>
+      <div style="font-size:12px;color:var(--gray);margin-bottom:14px">Reference templates used in monthly reports. Live messages are configured in the webhook server's <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--blue)">index.js</span>.</div>
       <div class="form-group" style="margin-bottom:14px">
         <label class="form-label">Business Hours (8am–6pm Mon–Sat)</label>
         <textarea class="form-textarea" id="sms-biz">Hi! Thanks for calling [BUSINESS NAME]. We're currently on a job but we're here for you. For urgent requests text URGENT and we'll call you back as soon as possible. To book: [BOOKING LINK]</textarea>
@@ -1544,7 +1550,7 @@ function testTwilio() {
   res.style.background = 'var(--light-gray)';
   res.textContent = 'Sending test SMS...';
   res.classList.remove('hidden');
-  const msg = `LaunchX Test ✓ Your missed call auto-text is working! Webhook: https://launchx-webhook.onrender.com`;
+  const msg = `Harris Reserve Test ✓ Your missed call auto-text is working! Webhook: https://launchx-webhook.onrender.com`;
   const body = new URLSearchParams({To: toNumber, From: twilio.from, Body: msg});
   fetch(`https://api.twilio.com/2010-04-01/Accounts/${twilio.sid}/Messages.json`, {
     method: 'POST',
