@@ -953,7 +953,7 @@
     <!-- SMS TEMPLATES -->
     <div class="tw-card">
       <div class="tw-card-title">SMS Message Templates</div>
-      <div style="font-size:12px;color:var(--gray);margin-bottom:14px">Reference templates used in monthly reports. Live messages are configured in the webhook server's <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--blue)">index.js</span>.</div>
+      <div style="font-size:12px;color:var(--gray);margin-bottom:14px">Reference templates used in monthly reports. Live messages are in <a style="font-family:'DM Mono',monospace;font-size:11px;color:var(--blue)">index.js</span>.</div>
       <div class="form-group" style="margin-bottom:14px">
         <label class="form-label">Business Hours (8am–6pm Mon–Sat)</label>
         <textarea class="form-textarea" id="sms-biz">Hi! Thanks for calling [BUSINESS NAME]. We're currently on a job but we're here for you. For urgent requests text URGENT and we'll call you back as soon as possible. To book: [BOOKING LINK]</textarea>
@@ -1463,35 +1463,220 @@ function buildReport(l, logs, monthVal, monthLabel) {
 function printOne(id) {
   const el = document.getElementById('report-'+id);
   if(!el) return;
+
+  // Extract data from the rendered report element
+  const bizName = el.querySelector('.report-biz')?.textContent || '';
+  const subs = el.querySelectorAll('.report-sub');
+  const reportPeriod = subs[0]?.textContent || '';
+  const planLine = subs[1]?.textContent || '';
+
+  const statVals = el.querySelectorAll('.report-stat-val');
+  const statLabels = el.querySelectorAll('.report-stat-label');
+  const stats = Array.from(statVals).map((v,i) => ({val: v.textContent, label: statLabels[i]?.textContent||'', color: v.style.color||''}));
+
+  const rows = el.querySelectorAll('.report-row');
+  const breakdownRows = [], revenueRows = [];
+  let inRevenue = false;
+  rows.forEach(r => {
+    const spans = r.querySelectorAll('span');
+    const key = spans[0]?.textContent||'';
+    const val = spans[1]?.textContent||'';
+    const isBold = spans[0]?.style.fontWeight === '600' || spans[1]?.style.color;
+    const color = spans[1]?.style.color||'';
+    if(key.includes('Booking link clicks')||key.includes('Avg job')||key.includes('Est. bookings')||key.includes('Est. revenue')||key.includes('Monthly service')||key.includes('Estimated ROI')) {
+      revenueRows.push({key,val,bold:isBold,color});
+    } else {
+      breakdownRows.push({key,val,bold:isBold,color});
+    }
+  });
+
+  const insights = Array.from(el.querySelectorAll('.report-insight')).map(i=>i.textContent);
+  const smsText = el.querySelector('.report-sms-preview')?.textContent||'';
+
+  const barFills = el.querySelectorAll('.bar-fill');
+  const barLabels = el.querySelectorAll('.bar-label');
+  const bars = Array.from(barFills).map((b,i)=>({height:b.style.height, opacity:b.style.opacity||'1', label: barLabels[i]?.textContent||''}));
+
+  const logoSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="36" height="36">
+    <rect width="32" height="32" rx="6" fill="#0d2535"/>
+    <rect x="8" y="8" width="16" height="16" rx="1" fill="none" stroke="#4a8fa8" stroke-width="1.5" transform="rotate(45 16 16)"/>
+    <rect x="11" y="11" width="10" height="10" rx="1" fill="#7bbdd4" opacity="0.7" transform="rotate(45 16 16)"/>
+    <rect x="13" y="13" width="6" height="6" fill="#4a8fa8" transform="rotate(45 16 16)"/>
+  </svg>`;
+
   const win = window.open('', '_blank');
-  win.document.write(`<html><head><title>Report</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  win.document.write(`<!DOCTYPE html><html><head><title>Harris Reserve — ${bizName} Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'DM Sans',sans-serif;padding:24px;color:#1A1A2E;background:white}
-    .report-wrap{border:1px solid #E5E7EB;border-radius:12px;overflow:hidden;max-width:780px;margin:0 auto}
-    .report-top{background:#1A1A2E;padding:20px 24px;color:white}
-    .report-biz{font-size:18px;font-weight:700}.report-sub{font-size:12px;color:rgba(255,255,255,0.5);margin-top:3px}
-    .report-body{padding:20px 24px}
-    .report-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
-    .report-stat{background:#F3F4F6;border-radius:8px;padding:12px}
-    .report-stat-val{font-size:22px;font-weight:700}.report-stat-label{font-size:10px;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;margin-top:3px}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
-    .report-section-title{font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid #E5E7EB}
-    .report-row{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid #F9FAFB}
-    .report-row span:last-child{font-weight:600}
-    .report-section{margin-bottom:18px}
-    .report-insight{background:#EEF2FF;border-radius:6px;padding:8px 12px;font-size:11px;color:#3730A3;margin-bottom:5px;line-height:1.5}
-    .report-sms-preview{background:#F3F4F6;border-radius:6px;padding:10px 12px;font-size:12px;font-style:italic;line-height:1.5}
-    .bar-chart{display:flex;gap:4px;align-items:flex-end;height:50px;margin:8px 0}
-    .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px}
-    .bar-fill{width:100%;background:#5B72E8;border-radius:2px 2px 0 0}
-    .bar-label{font-size:9px;color:#6B7280}
-    button{display:none!important}
-  </style></head><body>${el.outerHTML}</body></html>`);
+    body{font-family:'DM Sans',sans-serif;background:#f4f6f8;color:#0d2535;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+    .page{max-width:760px;margin:0 auto;background:white;min-height:100vh;position:relative;box-shadow:0 0 40px rgba(0,0,0,0.12)}
+
+    /* HEADER BAND */
+    .header{background:linear-gradient(135deg,#081820 0%,#0d2535 50%,#1a3a4a 100%);padding:32px 40px 28px;position:relative;overflow:hidden}
+    .header::after{content:'';position:absolute;top:0;right:0;bottom:0;width:180px;background:radial-gradient(ellipse at 80% 50%,rgba(74,143,168,0.25) 0%,transparent 70%);pointer-events:none}
+    .header-inner{display:flex;align-items:flex-start;justify-content:space-between;position:relative;z-index:1}
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand-text .name{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:white;letter-spacing:0.01em}
+    .brand-text .name span{color:#7bbdd4}
+    .brand-text .tagline{font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-top:2px}
+    .report-meta{text-align:right}
+    .report-meta .doc-type{font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#4a8fa8;margin-bottom:6px}
+    .report-meta .biz-name{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:white;line-height:1.1}
+    .report-meta .period{font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px}
+    .report-meta .plan-tag{display:inline-block;margin-top:6px;background:rgba(74,143,168,0.2);border:1px solid rgba(74,143,168,0.4);color:#7bbdd4;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border-radius:4px}
+
+    /* ACCENT LINE */
+    .accent-line{height:3px;background:linear-gradient(90deg,#4a8fa8 0%,#7bbdd4 50%,transparent 100%)}
+
+    /* BODY */
+    .body{padding:32px 40px}
+
+    /* STAT ROW */
+    .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid #e0e7ef;border-radius:10px;overflow:hidden;margin-bottom:28px}
+    .stat-cell{padding:16px 18px;text-align:center;border-right:1px solid #e0e7ef}
+    .stat-cell:last-child{border-right:none}
+    .stat-cell:nth-child(odd){background:#f7f9fb}
+    .stat-num{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:600;line-height:1;color:#0d2535}
+    .stat-num.green{color:#16A34A}
+    .stat-num.blue{color:#4a8fa8}
+    .stat-label{font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#8a9ab0;margin-top:5px}
+
+    /* TWO COL */
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px}
+
+    /* TABLE SECTION */
+    .section-label{font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#4a8fa8;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+    .section-label::after{content:'';flex:1;height:1px;background:#e0e7ef}
+    .data-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f0f4f8;font-size:12px}
+    .data-row:last-child{border-bottom:none}
+    .data-row .k{color:#5a6a7a}
+    .data-row .v{font-weight:600;color:#0d2535}
+    .data-row .v.green{color:#16A34A}
+    .data-row .v.blue{color:#4a8fa8}
+    .data-row.bold-row .k{font-weight:700;color:#0d2535}
+    .data-row.bold-row .v{font-size:13px}
+
+    /* BAR CHART */
+    .chart-section{margin-bottom:24px}
+    .bar-wrap{display:flex;gap:6px;align-items:flex-end;height:60px;padding:0 4px}
+    .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+    .bar-fill{width:100%;background:linear-gradient(180deg,#7bbdd4 0%,#4a8fa8 100%);border-radius:3px 3px 0 0;min-height:4px}
+    .bar-lbl{font-size:9px;color:#8a9ab0;font-weight:600;letter-spacing:0.04em}
+
+    /* INSIGHTS */
+    .insights-section{margin-bottom:24px}
+    .insight-item{display:flex;gap:10px;margin-bottom:8px;align-items:flex-start}
+    .insight-dot{width:6px;height:6px;border-radius:50%;background:#4a8fa8;flex-shrink:0;margin-top:5px}
+    .insight-text{font-size:12px;color:#1a3a4a;line-height:1.6}
+
+    /* SMS BOX */
+    .sms-box{background:linear-gradient(135deg,#f0f7fb 0%,#e8f4f9 100%);border:1px solid #c5dde8;border-radius:8px;padding:16px 20px;font-size:12px;color:#1a3a4a;line-height:1.7;font-style:italic;position:relative}
+    .sms-box::before{content:'SMS';position:absolute;top:-1px;left:16px;transform:translateY(-50%);background:#4a8fa8;color:white;font-size:9px;font-weight:700;letter-spacing:0.1em;padding:2px 8px;border-radius:10px}
+
+    /* FOOTER */
+    .footer{border-top:1px solid #e0e7ef;margin-top:32px;padding-top:16px;display:flex;justify-content:space-between;align-items:center}
+    .footer-brand{font-size:11px;color:#8a9ab0}
+    .footer-brand strong{color:#4a8fa8}
+    .footer-page{font-size:10px;color:#b0bec5;letter-spacing:0.06em}
+    .footer-contact{font-size:10px;color:#8a9ab0;text-align:right}
+
+    @media print{
+      body{background:white}
+      .page{box-shadow:none;max-width:100%}
+      @page{margin:0.4in;size:letter}
+    }
+  </style></head><body>
+  <div class="page">
+    <div class="header">
+      <div class="header-inner">
+        <div class="brand">
+          ${logoSVG}
+          <div class="brand-text">
+            <div class="name">Harris <span>Reserve</span></div>
+            <div class="tagline">Digital Services</div>
+          </div>
+        </div>
+        <div class="report-meta">
+          <div class="doc-type">Missed Call Recovery Report</div>
+          <div class="biz-name">${bizName}</div>
+          <div class="period">${reportPeriod.replace('Missed Call Recovery Report · ','')}</div>
+          <div><span class="plan-tag">${planLine}</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="accent-line"></div>
+
+    <div class="body">
+
+      <!-- STATS -->
+      <div class="stat-row">
+        ${stats.map(s=>`
+          <div class="stat-cell">
+            <div class="stat-num ${s.color.includes('green')||s.color.includes('16A')?'green':s.color.includes('blue')||s.color.includes('4a8')||s.color.includes('5B7')?'blue':''}">${s.val}</div>
+            <div class="stat-label">${s.label}</div>
+          </div>`).join('')}
+      </div>
+
+      <!-- BREAKDOWN + REVENUE -->
+      <div class="two-col">
+        <div>
+          <div class="section-label">Call Breakdown</div>
+          ${breakdownRows.map(r=>`
+            <div class="data-row ${r.bold?'bold-row':''}">
+              <span class="k">${r.key}</span>
+              <span class="v ${r.color.includes('green')||r.color.includes('16A')?'green':r.color.includes('blue')||r.color.includes('5B7')||r.color.includes('4a8')?'blue':''}">${r.val}</span>
+            </div>`).join('')}
+        </div>
+        <div>
+          <div class="section-label">Revenue Impact</div>
+          ${revenueRows.map(r=>`
+            <div class="data-row ${r.bold?'bold-row':''}">
+              <span class="k">${r.key}</span>
+              <span class="v ${r.color.includes('green')||r.color.includes('16A')?'green':r.color.includes('blue')||r.color.includes('5B7')||r.color.includes('4a8')?'blue':''}">${r.val}</span>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <!-- BAR CHART -->
+      <div class="chart-section">
+        <div class="section-label">Calls by Day of Week</div>
+        <div class="bar-wrap">
+          ${bars.map(b=>`
+            <div class="bar-col">
+              <div class="bar-fill" style="height:${b.height};opacity:${b.opacity}"></div>
+              <div class="bar-lbl">${b.label}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <!-- INSIGHTS -->
+      ${insights.length ? `
+      <div class="insights-section">
+        <div class="section-label">Key Insights</div>
+        ${insights.map(i=>`
+          <div class="insight-item">
+            <div class="insight-dot"></div>
+            <div class="insight-text">${i}</div>
+          </div>`).join('')}
+      </div>` : ''}
+
+      <!-- SMS -->
+      <div class="section-label" style="margin-bottom:16px">Auto-Text Message Sent to Callers</div>
+      <div class="sms-box">${smsText}</div>
+
+      <!-- FOOTER -->
+      <div class="footer">
+        <div class="footer-brand">Powered by <strong>Harris Reserve Digital Services</strong></div>
+        <div class="footer-contact">landon@harrisreserve.com · (469) 298-8024</div>
+      </div>
+
+    </div>
+  </div>
+  <scri"+"pt>window.onload=()=>{window.print()}</scri"+"pt>
+  </body></html>`);
   win.document.close();
-  win.focus();
-  setTimeout(() => { win.print(); win.close(); }, 500);
 }
 
 // ── TWILIO ──
