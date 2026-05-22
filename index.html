@@ -739,13 +739,34 @@
           <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer"><input type="checkbox" id="ob-stripe"> Stripe recurring sent</label>
         </div>
       </div>
+      <div style="margin-bottom:16px;background:var(--light-gray);border-radius:10px;padding:14px">
+        <div style="font-size:12px;font-weight:700;color:var(--dark);margin-bottom:10px">⏰ Business Hours</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:end">
+          <div class="form-group">
+            <label class="form-label">Open Time</label>
+            <input type="time" class="form-input" id="c-hours-open" value="08:00">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Close Time</label>
+            <input type="time" class="form-input" id="c-hours-close" value="18:00">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Open on Sundays?</label>
+            <select class="form-select" id="c-sunday">
+              <option value="false">Closed Sundays</option>
+              <option value="true">Open Sundays</option>
+            </select>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--gray);margin-top:8px">These control which message fires. After hours = outside these times + Sunday (unless open).</div>
+      </div>
       <div class="form-group" style="margin-bottom:12px">
-        <label class="form-label">Business Hours Message (8am–6pm Mon–Sat)</label>
+        <label class="form-label">Business Hours Message</label>
         <textarea class="form-textarea" id="c-biz-msg" style="min-height:80px" placeholder="Hi! Thanks for calling [BUSINESS NAME]. We're on a job but here for you. Text URGENT for emergencies or book here: [BOOKING LINK]"></textarea>
         <div style="font-size:11px;color:var(--gray);margin-top:4px">Use [BUSINESS NAME] and [BOOKING LINK] as placeholders — they get replaced automatically</div>
       </div>
       <div class="form-group" style="margin-bottom:20px">
-        <label class="form-label">After Hours Message (6pm–8am & Sunday)</label>
+        <label class="form-label">After Hours Message</label>
         <textarea class="form-textarea" id="c-after-msg" style="min-height:80px" placeholder="Hi! Thanks for calling [BUSINESS NAME]. We're closed but available for emergencies. Text EMERGENCY for urgent issues or book here: [BOOKING LINK]"></textarea>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end">
@@ -1858,6 +1879,9 @@ function openClientModal(c) {
   document.getElementById('c-plan').value = c?.plan||'standard';
   document.getElementById('c-active').value = c?.active!==false?'true':'false';
   document.getElementById('c-owner-phone').value = c?.owner_phone||'';
+  document.getElementById('c-hours-open').value = c?.hours_open||'08:00';
+  document.getElementById('c-hours-close').value = c?.hours_close||'18:00';
+  document.getElementById('c-sunday').value = c?.open_sundays?'true':'false';
   document.getElementById('c-biz-msg').value = c?.biz_hours_message||'';
   document.getElementById('c-after-msg').value = c?.after_hours_message||'';
   document.getElementById('c-bitly').value = c?.bitly_link||'';
@@ -1911,6 +1935,9 @@ async function saveClient() {
     plan: document.getElementById('c-plan').value,
     active: document.getElementById('c-active').value === 'true',
     owner_phone: document.getElementById('c-owner-phone').value.trim() || null,
+    hours_open: document.getElementById('c-hours-open').value || '08:00',
+    hours_close: document.getElementById('c-hours-close').value || '18:00',
+    open_sundays: document.getElementById('c-sunday').value === 'true',
     biz_hours_message: document.getElementById('c-biz-msg').value.trim(),
     after_hours_message: document.getElementById('c-after-msg').value.trim(),
     bitly_link: document.getElementById('c-bitly').value.trim() || null,
